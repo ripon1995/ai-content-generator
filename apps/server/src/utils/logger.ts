@@ -60,4 +60,11 @@ const logger = winston.createLogger({
   transports,
 });
 
+// morgan helper : for integration
+export const morganStream = {
+  write: (message: string) => {
+    logger.http(message.trim());
+  },
+};
+
 export default logger;

@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
-import { sendValidationError } from '../utils/response';
 import { IErrorDetail } from '../types/response_interfaces';
 import { REGISTRATION_VALIDATION_MESSAGES } from '../utils/messages';
 import { REGEX_PATTERN, CONSTANT_VALUES} from '../utils/constants';
+import { ValidationException } from '../exceptions';
 
 // validation middleware : registration api
-export const validate = (req: Request, res: Response, next: NextFunction) => {
+export const validate = (req: Request, _: Response, next: NextFunction) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -15,7 +15,7 @@ export const validate = (req: Request, res: Response, next: NextFunction) => {
       message: error.msg,
     }));
 
-    return sendValidationError(res, 'Validation failed', errorDetails);
+    throw new ValidationException(errorDetails);
   }
 
   next();

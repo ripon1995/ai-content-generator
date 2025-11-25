@@ -35,6 +35,8 @@ export const HTTP_STATUS_CODES : THttpStatusCodes = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
 
   // status codes: server side
   INTERNAL_SERVER_ERROR: 500,

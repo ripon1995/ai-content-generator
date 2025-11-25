@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { Request, Response } from 'express';
 import { authController } from '../controllers/auth_controller';
 import { registerValidation, validate } from '../middleware/validation';
+import { asyncHandler } from '../middleware/error_handler';
 
 const router: Router = Router();
 
@@ -10,7 +10,7 @@ router.post(
   '/register',
   registerValidation,
   validate,
-  (req: Request, res: Response) => authController.register(req, res)
+  asyncHandler((req, res) => authController.register(req, res))
 );
 
 export default router;

@@ -1,5 +1,6 @@
 import { User } from '../models';
 import { IUserDocument, IUserInput } from '../types/user_interfaces';
+import { ConflictException } from '../exceptions';
 import logger from '../utils/logger';
 
 // auth service file to handle business logics
@@ -9,30 +10,25 @@ export class AuthService {
   async register(userData: IUserInput): Promise<IUserDocument> {
     const { email, password, firstName, lastName } = userData;
 
-    try {
-      // check if user already exists (middleware auto-filters isDeleted: false)
-      const existingUser = await User.findOne({ email });
+    // check if user already exists (middleware auto-filters isDeleted: false)
+    const existingUser = await User.findOne({ email });
 
-      if (existingUser) {
-        logger.warn(`Registration attempt with existing email: ${email}`);
-        throw new Error('Email already registered');
-      }
-
-      // create new user (password will be hashed automatically by pre-save hook)
-      const newUser = await User.create({
-        email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      logger.info(`New user registered successfully: ${email}`);
-
-      return newUser;
-    } catch (error) {
-      logger.error('Error during user registration:', error);
-      throw error;
+    if (existingUser) {
+      logger.warn(`Registration attempt with existing email: ${email}`);
+      throw new ConflictException('Email already registered');
     }
+
+    // create new user (password will be hashed automatically by pre-save hook)
+    const newUser = await User.create({
+      email,
+      password,
+      firstName,
+      lastName,
+    });
+
+    logger.info(`New user registered successfully: ${email}`);
+
+    return newUser;
   }
 
 

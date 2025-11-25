@@ -4,6 +4,7 @@ import { IUserDocument } from '../types/user_interfaces';
 import { USER_SCHEMA_MESSAGES } from '../utils/messages';
 import { REGEX_PATTERN, CONSTANT_VALUES } from '../utils/constants';
 import { baseFlagFields, baseSchemaOptions } from './base_schema_fields';
+import { applyBaseQueryManager } from '../middleware/query_manager';
 import logger from '../utils/logger';
 
 // schema definition : user
@@ -96,6 +97,9 @@ userSchema.set('toJSON', {
     return ret;
   },
 });
+
+// apply query manager middleware
+applyBaseQueryManager(userSchema);
 
 // user model
 export const User = model<IUserDocument>('User', userSchema);

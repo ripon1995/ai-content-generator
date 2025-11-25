@@ -1,4 +1,4 @@
-import {TResponseDefaultMessages, THttpStatusCodes} from '../types/messages_types';
+import {TMessages, THttpStatusCodes} from '../types/messages_types';
 
 // constant : messages for mongo db connection and errors
 export const MONGO_DB_MESSAGES = {
@@ -14,7 +14,7 @@ export const ENV_MESSAGES = {
 };
 
 // constant : default response messages
-export const RESPONSE_DEFAULT_MESSAGES : TResponseDefaultMessages = {
+export const RESPONSE_DEFAULT_MESSAGES : TMessages = {
     SUCCESS: 'Successful',
     INTERNAL_ERROR: 'An internal error occurred',
     RESOURCE_NOT_FOUND: 'Resource not found',
@@ -39,3 +39,34 @@ export const HTTP_STATUS_CODES : THttpStatusCodes = {
   // status codes: server side
   INTERNAL_SERVER_ERROR: 500,
 };
+
+
+export const COMMON_MEAAGES : TMessages = {
+    EMAIL_REQUIRED: 'Email is required',
+    VALID_EMAIL: 'Please provide a valid email address',
+    PASSWORD_REQUIRED: 'Password is required',
+    VALID_PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters long',
+    FIRST_NAME_REQUIRED: 'First name is required',
+    LAST_NAME_REQIRED: 'Last name is required',
+}
+
+// constant : user schema messages
+export const USER_SCHEMA_MESSAGES : TMessages = {
+    ...COMMON_MEAAGES,
+    // schema specific messages
+    VALID_FIRST_NAME_MIN_LENGTH: 'First name must be at least 2 characters long',
+    VALID_FIRST_NAME_MAX_LENGTH: 'First name cannot exceed 50 characters',
+    VALID_LAST_NAME_MIN_LENGTH: 'Last name must be at least 2 characters long',
+    VALID_LAST_NAME_MAX_LENGTH: 'Last name cannot exceed 50 characters'
+}
+
+// constant : user validation messages for registration api
+export const REGISTRATION_VALIDATION_MESSAGES : TMessages = {
+    ...COMMON_MEAAGES,
+    // api specific messages
+    PASSWORD_VALIDATION_RULE: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+    FIRST_NAME_VALIDATION_LENGTH: 'First name must be between 2 and 50 characters',
+    FIRST_NAME_VALIDATION_RULE: 'First name can only contain letters and spaces',
+    LAST_NAME_VALIDATION_LENGTH: 'Last name must be between 2 and 50 characters',
+    LAST_NAME_VALIDATION_RULE: 'Last name can only contain letters and spaces',
+}

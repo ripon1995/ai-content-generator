@@ -13,6 +13,13 @@ interface EnvConfig {
   jwtSecret: string;
   jwtAccessTokenExpiresIn: number;
   jwtRefreshTokenExpiresIn: number;
+  redisHost: string;
+  redisPort: number;
+  redisPassword?: string;
+  geminiApiKey: string;
+  geminiModel: string;
+  geminiTemperature: number;
+  geminiMaxTokens: number;
 }
 
 const getEnvVar = (key: string, defaultValue?: string): string => {
@@ -31,4 +38,11 @@ export const env: EnvConfig = {
   jwtSecret: getEnvVar('JWT_SECRET'),
   jwtAccessTokenExpiresIn: parseInt(getEnvVar('JWT_ACCESS_TOKEN_EXPIRES_IN', '900'), 10),
   jwtRefreshTokenExpiresIn: parseInt(getEnvVar('JWT_REFRESH_TOKEN_EXPIRES_IN', '604800'), 10),
+  redisHost: getEnvVar('REDIS_HOST', 'localhost'),
+  redisPort: parseInt(getEnvVar('REDIS_PORT', '6379'), 10),
+  redisPassword: process.env.REDIS_PASSWORD,
+  geminiApiKey: getEnvVar('GEMINI_API_KEY'),
+  geminiModel: getEnvVar('GEMINI_MODEL', 'gemini-1.5-flash'),
+  geminiTemperature: parseFloat(getEnvVar('GEMINI_TEMPERATURE', '0.7')),
+  geminiMaxTokens: parseInt(getEnvVar('GEMINI_MAX_TOKENS', '1024'), 10),
 };

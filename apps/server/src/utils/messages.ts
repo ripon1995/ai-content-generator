@@ -77,3 +77,15 @@ export const REGISTRATION_VALIDATION_MESSAGES : TMessages = {
 export const LOGIN_VALIDATION_MESSAGES : TMessages = {
     ...COMMON_MEAAGES,
 }
+
+// constant : content validation messages
+export const CONTENT_VALIDATION_MESSAGES : TMessages = {
+    TITLE_REQUIRED: 'Title is required',
+    TITLE_MAX_LENGTH: 'Title cannot exceed 200 characters',
+    CONTENT_TYPE_REQUIRED: 'Content type is required',
+    CONTENT_TYPE_INVALID: 'Content type must be one of: blog, product, social',
+    PROMPT_REQUIRED: 'Prompt is required',
+    PROMPT_MAX_LENGTH: 'Prompt cannot exceed 1000 characters',
+    GENERATED_TEXT_REQUIRED: 'Generated text is required',
+    STATUS_INVALID: 'Status must be either draft or published',
+}

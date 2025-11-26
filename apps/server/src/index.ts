@@ -1,14 +1,11 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/database';
 import { env } from './config/env';
 import logger from './utils/logger';
-import { sendSuccess } from './utils/response';
 import { httpLogger } from './middleware/api_logging';
 import { errorHandler } from './middleware/error_handler';
-import { authenticate } from './middleware/auth';
 import apiRoutes from './routes';
-import router from './routes';
 
 const app = express();
 
@@ -21,26 +18,6 @@ app.use(httpLogger);
 
 // API Routes : public
 app.use('/api', apiRoutes);
-
-
-// API Routes : protected
-router.use(authenticate);
-app.get('/api/welcome', (req: Request, res: Response) => {
-  logger.info(`Welcome endpoint accessed by user: ${req.user?.email}`);
-
-  return sendSuccess(
-    res,
-    {
-      status: 'Server is running',
-      version: '1.0.0',
-      user: {
-        userId: req.user?.userId,
-        email: req.user?.email,
-      },
-    },
-    `Welcome to AI Content Generator API, ${req.user?.email}! 🚀`
-  );
-});
 
 
 

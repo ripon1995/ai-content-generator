@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth_controller';
-import { registerValidation, loginValidation, validate } from '../middleware/validation';
+import {
+  registerValidation,
+  loginValidation,
+  refreshTokenValidation,
+  validate,
+} from '../middleware/validation';
 import { asyncHandler } from '../middleware/error_handler';
 
 const router: Router = Router();
@@ -19,6 +24,14 @@ router.post(
   loginValidation,
   validate,
   asyncHandler((req, res) => authController.login(req, res))
+);
+
+// public route : /refresh-token => to refresh access token
+router.post(
+  '/refresh-token',
+  refreshTokenValidation,
+  validate,
+  asyncHandler((req, res) => authController.refreshToken(req, res))
 );
 
 export default router;

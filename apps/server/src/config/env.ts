@@ -29,6 +29,6 @@ export const env: EnvConfig = {
   mongodbUri: getEnvVar('MONGODB_URI'),
   frontendUrl: getEnvVar('FRONTEND_URL', 'http://localhost:5173'),
   jwtSecret: getEnvVar('JWT_SECRET'),
-  jwtAccessTokenExpiresIn: parseInt(getEnvVar('JWT_ACCESS_TOKEN_EXPIRES_IN', '60'), 10),
-  jwtRefreshTokenExpiresIn: parseInt(getEnvVar('JWT_REFRESH_TOKEN_EXPIRES_IN', '300'), 10),
+  jwtAccessTokenExpiresIn: parseInt(getEnvVar('JWT_ACCESS_TOKEN_EXPIRES_IN', '900'), 10),
+  jwtRefreshTokenExpiresIn: parseInt(getEnvVar('JWT_REFRESH_TOKEN_EXPIRES_IN', '604800'), 10),
 };

@@ -1,15 +1,18 @@
-import { User } from '../models';
+import { User, RefreshToken } from '../models';
 import { IUserDocument, IUserInput } from '../types/user_interfaces';
 import { ConflictException, UnauthorizedException } from '../exceptions';
 import logger from '../utils/logger';
-import { generateTokens } from '../utils/jwt';
+import { generateTokens, verifyToken, generateAccessToken } from '../utils/jwt';
+import { env } from '../config/env';
 
 // auth service file to handle business logics
 
 export class AuthService {
   // register a new user
   async register(
-    userData: IUserInput
+    userData: IUserInput,
+    deviceInfo?: string,
+    ipAddress?: string
   ): Promise<{ user: IUserDocument; accessToken: string; refreshToken: string }> {
     const { email, password, firstName, lastName } = userData;
 
@@ -35,6 +38,17 @@ export class AuthService {
       email: newUser.email,
     });
 
+    // store refresh token in database (will be hashed by pre-save hook)
+    const expiresAt = new Date(Date.now() + env.jwtRefreshTokenExpiresIn * 1000);
+    await RefreshToken.create({
+      userId: newUser._id.toString(),
+      token: refreshToken,
+      expiresAt,
+      deviceInfo,
+      ipAddress,
+      lastUsedAt: new Date(),
+    });
+
     logger.info(`New user registered successfully: ${email}`);
 
     return { user: newUser, accessToken, refreshToken };
@@ -43,7 +57,9 @@ export class AuthService {
   // login user
   async login(
     email: string,
-    password: string
+    password: string,
+    deviceInfo?: string,
+    ipAddress?: string
   ): Promise<{ user: IUserDocument; accessToken: string; refreshToken: string }> {
     // find user by email (include password field)
     const user = await this.getUserByEmail(email);
@@ -67,6 +83,17 @@ export class AuthService {
       email: user.email,
     });
 
+    // store refresh token in database (will be hashed by pre-save hook)
+    const expiresAt = new Date(Date.now() + env.jwtRefreshTokenExpiresIn * 1000);
+    await RefreshToken.create({
+      userId: user._id.toString(),
+      token: refreshToken,
+      expiresAt,
+      deviceInfo,
+      ipAddress,
+      lastUsedAt: new Date(),
+    });
+
     logger.info(`User logged in successfully: ${email}`);
 
     return { user, accessToken, refreshToken };
@@ -85,8 +112,69 @@ export class AuthService {
   }
 
   // find user by id
-  async getUserById(userId: string): Promise<IUserDocument | null> {
+  private async getUserById(userId: string): Promise<IUserDocument | null> {
     return await User.findOne({ _id: userId });
+  }
+
+  // refresh access token using refresh token
+  async refreshAccessToken(
+    refreshTokenString: string
+  ): Promise<{ accessToken: string; user: IUserDocument }> {
+    // verify refresh token JWT signature
+    const decoded = verifyToken(refreshTokenString);
+
+    // find user
+    const user = await this.getUserById(decoded.userId);
+    if (!user) {
+      logger.warn(`Refresh token attempt with non-existent user ID: ${decoded.userId}`);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // find refresh token in database
+    const storedTokens = await RefreshToken.find({
+      userId: decoded.userId,
+      isRevoked: false,
+    });
+
+    if (!storedTokens || storedTokens.length === 0) {
+      logger.warn(`No valid refresh tokens found for user: ${decoded.email}`);
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    // compare with stored tokens (since they're hashed)
+    let validToken = null;
+    for (const storedToken of storedTokens) {
+      const isMatch = await storedToken.compareToken(refreshTokenString);
+      if (isMatch) {
+        validToken = storedToken;
+        break;
+      }
+    }
+
+    if (!validToken) {
+      logger.warn(`Refresh token not found in database for user: ${decoded.email}`);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // check if token is expired
+    if (validToken.expiresAt < new Date()) {
+      logger.warn(`Expired refresh token used by user: ${decoded.email}`);
+      throw new UnauthorizedException('Refresh token has expired. Please login again');
+    }
+
+    // generate new access token
+    const accessToken = generateAccessToken({
+      userId: user._id.toString(),
+      email: user.email,
+    });
+
+    // update last used timestamp
+    validToken.lastUsedAt = new Date();
+    await validToken.save();
+
+    logger.info(`Access token refreshed for user: ${decoded.email}`);
+
+    return { accessToken, user };
   }
 }
 

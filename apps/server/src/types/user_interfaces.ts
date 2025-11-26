@@ -37,3 +37,9 @@ export interface IAuthResponse {
   access_token: string;
   refresh_token: string;
 }
+
+// responst structure : refresh token
+export interface IRefreshResponse {
+  user: IUserResponse;
+  access_token: string;
+}

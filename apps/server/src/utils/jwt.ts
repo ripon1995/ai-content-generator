@@ -16,7 +16,7 @@ export interface IDecodedToken extends IJwtPayload {
 }
 
 // generate access token
-const generateAccessToken = (payload: IJwtPayload): string => {
+export const generateAccessToken = (payload: IJwtPayload): string => {
   try {
     const token = jwt.sign(payload, env.jwtSecret, {
       expiresIn: env.jwtAccessTokenExpiresIn,

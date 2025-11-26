@@ -75,3 +75,12 @@ export const loginValidation = [
     .notEmpty()
     .withMessage(LOGIN_VALIDATION_MESSAGES.PASSWORD_REQUIRED),
 ];
+
+// validation rules for refresh token
+export const refreshTokenValidation = [
+  body('refresh_token')
+    .notEmpty()
+    .withMessage('Refresh token is required')
+    .isString()
+    .withMessage('Refresh token must be a string'),
+];

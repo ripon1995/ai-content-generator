@@ -1,8 +1,7 @@
 import { ContentType } from '../types/content_interfaces';
 
-// AI prompt templates for different content types
-export const AI_PROMPT_TEMPLATES = {
-  blog: (prompt: string) => `
+
+const blogPromptHelper = (prompt:string): string => `
 You are a professional content writer specializing in blog posts. Create engaging, informative, and well-structured blog content.
 
 Task: Write a blog post based on the following topic/prompt.
@@ -10,38 +9,14 @@ Task: Write a blog post based on the following topic/prompt.
 Topic/Prompt: ${prompt}
 
 Requirements:
-- Create compelling and engaging content
-- Use a conversational yet professional tone
-- Include clear structure with introduction, main points, and conclusion
-- Make it SEO-friendly with natural keyword integration
-- Aim for approximately 500-800 words
-- Use subheadings where appropriate
+- Keep it concise and impactful
+- Aim for approximately 20-30 words
 - Write in a way that provides value to readers
 
-Generate the blog post content now:
-`,
+Generate the blog post content now:`;
 
-  product: (prompt: string) => `
-You are an expert copywriter specializing in product descriptions. Create compelling, persuasive product content that drives conversions.
 
-Task: Write a product description based on the following information.
-
-Product Information/Prompt: ${prompt}
-
-Requirements:
-- Create a compelling product description that highlights key features and benefits
-- Use persuasive and engaging language
-- Focus on customer benefits, not just features
-- Include a clear call-to-action mindset
-- Keep it concise yet informative (200-400 words)
-- Use power words that create desire
-- Format with bullet points for easy scanning if needed
-- Make it conversion-focused
-
-Generate the product description now:
-`,
-
-  social: (prompt: string) => `
+const socialPromptHelper = (prompt:string): string => `
 You are a social media content expert who creates engaging, viral-worthy posts. Create content optimized for social media engagement.
 
 Task: Create social media content based on the following topic/idea.
@@ -49,17 +24,38 @@ Task: Create social media content based on the following topic/idea.
 Topic/Idea: ${prompt}
 
 Requirements:
-- Create attention-grabbing, engaging social media content
-- Use a casual, friendly, and relatable tone
+- Include important points only
+- Aim for approximately 10-20 words
+- Write in a way that provides value to readers
 - Keep it concise and impactful (suitable for platforms like Twitter, LinkedIn, Facebook, Instagram)
-- Include emotional appeal or value proposition
-- Make it shareable and engaging
-- Consider including a call-to-action
-- Aim for 100-200 words maximum
-- Use line breaks for readability
+- Create attention-grabbing, engaging social media content
 
-Generate the social media content now:
-`,
+Generate the social media content now:`;
+
+
+const productPromptHelper = (prompt:string): string => `
+You are an expert copywriter specializing in product descriptions. Create compelling, persuasive product content that drives conversions.
+
+Task: Write a product description based on the following information.
+
+Product Information/Prompt: ${prompt}
+
+Requirements:
+- Include important points only
+- Use bullet points
+- Aim for approximately 20-30 words
+- Write in a way that provides value to readers
+- Keep it concise and impactful
+- Make sure to focus only Apple, Asus, Samsung product
+
+Generate the product description now:`;
+
+
+// AI prompt templates for different content types
+const AI_PROMPT_TEMPLATES = {
+  blog: blogPromptHelper,
+  product: productPromptHelper,
+  social: socialPromptHelper,
 };
 
 // get prompt template for specific content type

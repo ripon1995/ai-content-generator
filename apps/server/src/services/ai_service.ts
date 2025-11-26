@@ -14,7 +14,7 @@ export class AIServiceException extends Error {
 // AI service to handle content generation
 export class AIService {
   // generate content using Gemini AI
-  async generateContent(prompt: string, contentType: ContentType): Promise<string> {
+  private async generateContent(prompt: string, contentType: ContentType): Promise<string> {
     try {
       logger.info(`Generating ${contentType} content with Gemini AI`);
 

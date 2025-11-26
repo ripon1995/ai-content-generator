@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "worker:dev": "tsx watch src/worker.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker:dev\"",
     "build": "tsc",
     "start": "node dist/index.js",
+    "worker:prod": "node dist/worker.js",
+    "start:all": "concurrently \"npm run start\" \"npm run worker:prod\"",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -32,6 +36,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/morgan": "^1.9.10",
     "@types/node": "^20.11.5",
+    "concurrently": "^9.2.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

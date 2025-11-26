@@ -10,6 +10,9 @@ interface EnvConfig {
   nodeEnv: string;
   mongodbUri: string;
   frontendUrl: string;
+  jwtSecret: string;
+  jwtAccessTokenExpiresIn: number;
+  jwtRefreshTokenExpiresIn: number;
 }
 
 const getEnvVar = (key: string, defaultValue?: string): string => {
@@ -25,4 +28,7 @@ export const env: EnvConfig = {
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
   mongodbUri: getEnvVar('MONGODB_URI'),
   frontendUrl: getEnvVar('FRONTEND_URL', 'http://localhost:5173'),
+  jwtSecret: getEnvVar('JWT_SECRET'),
+  jwtAccessTokenExpiresIn: parseInt(getEnvVar('JWT_ACCESS_TOKEN_EXPIRES_IN', '60'), 10),
+  jwtRefreshTokenExpiresIn: parseInt(getEnvVar('JWT_REFRESH_TOKEN_EXPIRES_IN', '300'), 10),
 };

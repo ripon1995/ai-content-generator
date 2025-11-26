@@ -24,3 +24,16 @@ export interface IUserResponse {
   lastName: string;
   fullName: string;
 }
+
+// request body structure : login api
+export interface ILoginInput {
+  email: string;
+  password: string;
+}
+
+// response structure : authentication 
+export interface IAuthResponse {
+  user: IUserResponse;
+  access_token: string;
+  refresh_token: string;
+}

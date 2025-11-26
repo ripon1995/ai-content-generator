@@ -50,3 +50,10 @@ export class InternalServerException extends BaseException {
     super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
   }
 }
+
+// exception: token generation
+export class JWTTOkenGenerationException extends BaseException {
+  constructor(message: string = 'Failed to generate token') {
+    super(message, HTTP_STATUS_CODES.BAD_REQUEST)
+  }
+}

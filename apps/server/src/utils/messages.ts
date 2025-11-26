@@ -72,3 +72,8 @@ export const REGISTRATION_VALIDATION_MESSAGES : TMessages = {
     LAST_NAME_VALIDATION_LENGTH: 'Last name must be between 2 and 50 characters',
     LAST_NAME_VALIDATION_RULE: 'Last name can only contain letters and spaces',
 }
+
+// constant : user validation messages for login api
+export const LOGIN_VALIDATION_MESSAGES : TMessages = {
+    ...COMMON_MEAAGES,
+}

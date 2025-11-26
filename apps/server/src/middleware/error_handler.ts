@@ -8,9 +8,9 @@ import { HTTP_STATUS_CODES } from '../utils/messages';
 // it should be placed afer all routes
 export const errorHandler = (
   error: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): Response => {
   // Log the error
   logger.error('Error caught by error handler:', {

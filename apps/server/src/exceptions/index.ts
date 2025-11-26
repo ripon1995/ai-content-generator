@@ -9,4 +9,5 @@ export {
   ConflictException,
   ValidationException,
   InternalServerException,
+  JWTTOkenGenerationException,
 } from './http_exceptions';

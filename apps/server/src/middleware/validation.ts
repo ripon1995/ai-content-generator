@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import { IErrorDetail } from '../types/response_interfaces';
-import { REGISTRATION_VALIDATION_MESSAGES } from '../utils/messages';
+import { REGISTRATION_VALIDATION_MESSAGES, LOGIN_VALIDATION_MESSAGES } from '../utils/messages';
 import { REGEX_PATTERN, CONSTANT_VALUES} from '../utils/constants';
 import { ValidationException } from '../exceptions';
 
@@ -59,4 +59,19 @@ export const registerValidation = [
     .withMessage(REGISTRATION_VALIDATION_MESSAGES.LAST_NAME_VALIDATION_LENGTH)
     .matches(REGEX_PATTERN.NAME)
     .withMessage(REGISTRATION_VALIDATION_MESSAGES.LAST_NAME_VALIDATION_RULE),
+];
+
+// validation rules for login
+export const loginValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage(LOGIN_VALIDATION_MESSAGES.EMAIL_REQUIRED)
+    .isEmail()
+    .withMessage(LOGIN_VALIDATION_MESSAGES.VALID_EMAIL)
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty()
+    .withMessage(LOGIN_VALIDATION_MESSAGES.PASSWORD_REQUIRED),
 ];

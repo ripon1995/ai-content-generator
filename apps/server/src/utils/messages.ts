@@ -89,3 +89,23 @@ export const CONTENT_VALIDATION_MESSAGES : TMessages = {
     GENERATED_TEXT_REQUIRED: 'Generated text is required',
     STATUS_INVALID: 'Status must be either draft or published',
 }
+
+// constant : AI service messages
+export const AI_SERVICE_MESSAGES : TMessages = {
+    GENERATION_SUCCESS: 'Content generated successfully',
+    GENERATION_FAILED: 'Failed to generate content',
+    INVALID_API_KEY: 'Invalid or missing AI API key',
+    QUOTA_EXCEEDED: 'AI API quota exceeded',
+    CONTENT_BLOCKED: 'Content blocked by safety filters',
+    TIMEOUT: 'AI service timeout - please try again',
+    EMPTY_CONTENT: 'AI service returned empty content',
+    UNSUPPORTED_CONTENT_TYPE: 'Unsupported content type',
+}
+
+// constant : queue service messages
+export const QUEUE_SERVICE_MESSAGES : TMessages = {
+    JOB_ADDED: 'Content generation job added to queue',
+    JOB_NOT_FOUND: 'Job not found',
+    JOB_FAILED: 'Job processing failed',
+    CONTENT_NOT_FOUND: 'Content not found for job',
+}

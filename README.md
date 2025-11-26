@@ -20,7 +20,6 @@
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -829,42 +828,5 @@ Invalid token
 - Ensure `JWT_SECRET` and `JWT_REFRESH_SECRET` are set in `.env.local`
 - Token may have expired (access tokens expire in 15 minutes)
 - Use refresh token endpoint to get new access token
-
----
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-### Code Standards
-
-- Follow existing code style
-- Write meaningful commit messages
-- Add comments for complex logic
-- Update documentation as needed
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
----
-
-## Support
-
-For issues and questions:
-
-- Create an issue on GitHub
-- Check existing documentation
-- Review troubleshooting section
-
----
 
 **Built with ❤️ using Node.js, Express, MongoDB, Redis, and Google Gemini AI**

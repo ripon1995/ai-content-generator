@@ -7,6 +7,8 @@ import {
 import { NotFoundException, ForbiddenException } from '../exceptions';
 import logger from '../utils/logger';
 import { Types } from 'mongoose';
+import { queueService } from './queue_service';
+import { IContentGenerationJobData } from '../types/queue_interfaces';
 
 // content service to handle business logic
 export class ContentService {
@@ -131,7 +133,7 @@ export class ContentService {
   // delete content (soft delete)
   async deleteContent(contentId: string, userId: string): Promise<void> {
     const content = await Content.findById(contentId);
-    
+
     this.validateContentExists(content, contentId);
     this.validateContentOwnership(content!, userId, contentId);
 
@@ -140,6 +142,47 @@ export class ContentService {
     await content!.save();
 
     logger.info(`Content soft deleted: ${contentId} by user: ${userId}`);
+  }
+
+  // queue content generation
+  async queueContentGeneration(contentData: IContentInput): Promise<{ content: IContentDocument; jobId: string }> {
+    const { userId, title, contentType, prompt } = contentData;
+
+    // create content record with pending status
+    const newContent = await Content.create({
+      userId: new Types.ObjectId(userId),
+      title,
+      contentType,
+      prompt,
+      generatedText: '',
+      status: 'draft',
+      generationStatus: 'pending',
+    });
+
+    logger.info(`Content created for generation: ${newContent._id} by user: ${userId}`);
+
+    // prepare job data
+    const jobData: IContentGenerationJobData = {
+      userId,
+      contentId: newContent._id.toString(),
+      contentType,
+      prompt,
+      title,
+    };
+
+    // add job to queue
+    const jobId = await queueService.addContentGenerationJob(jobData);
+
+    // update content with jobId
+    newContent.jobId = jobId;
+    await newContent.save();
+
+    logger.info(`Content generation job queued: ${jobId} for content: ${newContent._id}`);
+
+    return {
+      content: newContent,
+      jobId,
+    };
   }
 }
 

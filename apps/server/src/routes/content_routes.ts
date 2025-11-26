@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { contentController } from '../controllers/content_controller';
-import { createContentValidation, updateContentValidation, validate } from '../middleware/validation';
+import { createContentValidation, updateContentValidation, queueContentGenerationValidation, validate } from '../middleware/validation';
 import { asyncHandler } from '../middleware/error_handler';
 import { authenticate } from '../middleware/auth';
 
@@ -41,6 +41,20 @@ router.put(
 router.delete(
   '/:id',
   asyncHandler((req, res) => contentController.deleteContent(req, res))
+);
+
+// protected route : POST /content/generate => queue content generation
+router.post(
+  '/generate',
+  queueContentGenerationValidation,
+  validate,
+  asyncHandler((req, res) => contentController.queueContentGeneration(req, res))
+);
+
+// protected route : GET /content/job/:jobId/status => get job status
+router.get(
+  '/job/:jobId/status',
+  asyncHandler((req, res) => contentController.getJobStatus(req, res))
 );
 
 export default router;

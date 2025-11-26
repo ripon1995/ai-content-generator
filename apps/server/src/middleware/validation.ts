@@ -147,3 +147,25 @@ export const updateContentValidation = [
     .isIn(['draft', 'published'])
     .withMessage(CONTENT_VALIDATION_MESSAGES.STATUS_INVALID),
 ];
+
+// validation rules for queue content generation
+export const queueContentGenerationValidation = [
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage(CONTENT_VALIDATION_MESSAGES.TITLE_REQUIRED)
+    .isLength({ max: 200 })
+    .withMessage(CONTENT_VALIDATION_MESSAGES.TITLE_MAX_LENGTH),
+
+  body('contentType')
+    .notEmpty()
+    .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_REQUIRED)
+    .isIn(['blog', 'product', 'social'])
+    .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_INVALID),
+
+  body('prompt')
+    .notEmpty()
+    .withMessage(CONTENT_VALIDATION_MESSAGES.PROMPT_REQUIRED)
+    .isLength({ max: 1000 })
+    .withMessage(CONTENT_VALIDATION_MESSAGES.PROMPT_MAX_LENGTH),
+];

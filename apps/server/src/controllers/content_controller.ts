@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { contentService } from '../services/content_service';
+import { queueService } from '../services/queue_service';
 import { sendSuccess } from '../utils/response';
 import { IContentUpdate, IContentResponse } from '../types/content_interfaces';
 import logger from '../utils/logger';
@@ -122,6 +123,48 @@ export class ContentController {
     logger.info(`Content deleted successfully: ${id}`);
 
     return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.OK);
+  }
+
+  // queue content generation
+  async queueContentGeneration(req: Request, res: Response): Promise<Response> {
+    const userId = (req as any).user.userId;
+    const { title, contentType, prompt } = req.body;
+
+    // queue content generation through service
+    const { content, jobId } = await contentService.queueContentGeneration({
+      userId,
+      title,
+      contentType,
+      prompt,
+    });
+
+    const contentResponse: IContentResponse = this.transformContentToResponse(content);
+
+    logger.info(`Content generation queued successfully: ${content._id}, Job ID: ${jobId}`);
+
+    return sendSuccess(
+      res,
+      {
+        ...contentResponse,
+        jobId,
+        message: 'Content generation queued. It will be processed in 1 minute.',
+        expectedDelay: 60000, // 1 minute in milliseconds
+      },
+      'Content generation queued successfully',
+      202 // HTTP 202 Accepted
+    );
+  }
+
+  // get job status
+  async getJobStatus(req: Request, res: Response): Promise<Response> {
+    const { jobId } = req.params;
+
+    // get job status from queue service
+    const jobStatus = await queueService.getJobStatus(jobId);
+
+    logger.info(`Job status retrieved: ${jobId}, Status: ${jobStatus.status}`);
+
+    return sendSuccess(res, jobStatus, 'Job status retrieved successfully', HTTP_STATUS_CODES.OK);
   }
 }
 

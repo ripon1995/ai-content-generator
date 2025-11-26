@@ -16,6 +16,9 @@ export class ContentController {
       prompt: content.prompt,
       generatedText: content.generatedText,
       status: content.status,
+      jobId: content.jobId,
+      generationStatus: content.generationStatus,
+      failureReason: content.failureReason,
     };
   }
 

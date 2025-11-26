@@ -28,7 +28,7 @@ export class ContentService {
 
   // create new content
   async createContent(contentData: IContentInput): Promise<IContentDocument> {
-    const { userId, title, contentType, prompt, generatedText, status } = contentData;
+    const { userId, title, contentType, prompt, generatedText, status, jobId, generationStatus } = contentData;
 
     // create new content
     const newContent = await Content.create({
@@ -36,8 +36,10 @@ export class ContentService {
       title,
       contentType,
       prompt,
-      generatedText,
+      generatedText: generatedText || '',
       status: status || 'draft',
+      jobId,
+      generationStatus: generationStatus || 'completed',
     });
 
     logger.info(`New content created: ${newContent._id} by user: ${userId}`);
@@ -116,6 +118,8 @@ export class ContentService {
     if (updateData.prompt !== undefined) content!.prompt = updateData.prompt;
     if (updateData.generatedText !== undefined) content!.generatedText = updateData.generatedText;
     if (updateData.status !== undefined) content!.status = updateData.status;
+    if (updateData.generationStatus !== undefined) content!.generationStatus = updateData.generationStatus;
+    if (updateData.failureReason !== undefined) content!.failureReason = updateData.failureReason;
 
     await content!.save();
 

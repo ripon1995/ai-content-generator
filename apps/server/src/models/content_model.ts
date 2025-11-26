@@ -21,8 +21,8 @@ const contentSchema = new Schema<IContentDocument>(
     contentType: {
       type: String,
       enum: {
-        values: ['blog', 'product', 'social', 'custom'],
-        message: 'Content type must be one of: blog, product, social, custom',
+        values: ['blog', 'product', 'social'],
+        message: 'Content type must be one of: blog, product, social',
       },
       required: [true, 'Content type is required'],
       index: true,
@@ -34,7 +34,7 @@ const contentSchema = new Schema<IContentDocument>(
     },
     generatedText: {
       type: String,
-      required: [true, 'Generated text is required'],
+      default: '',
     },
     status: {
       type: String,
@@ -45,6 +45,24 @@ const contentSchema = new Schema<IContentDocument>(
       default: 'draft',
       index: true,
     },
+    jobId: {
+      type: String,
+      sparse: true, // only index documents that have this field
+      unique: true,
+    },
+    generationStatus: {
+      type: String,
+      enum: {
+        values: ['pending', 'processing', 'completed', 'failed'],
+        message: 'Generation status must be one of: pending, processing, completed, failed',
+      },
+      default: 'completed',
+      index: true,
+    },
+    failureReason: {
+      type: String,
+      default: null,
+    },
     ...baseFlagFields,
   },
   baseSchemaOptions
@@ -53,6 +71,8 @@ const contentSchema = new Schema<IContentDocument>(
 // compound indexes for efficient queries
 contentSchema.index({ userId: 1, contentType: 1 });
 contentSchema.index({ userId: 1, status: 1 });
+contentSchema.index({ userId: 1, generationStatus: 1 });
+contentSchema.index({ jobId: 1 }, { unique: true, sparse: true });
 
 // apply query manager for soft deletes
 applyBaseQueryManager(contentSchema);

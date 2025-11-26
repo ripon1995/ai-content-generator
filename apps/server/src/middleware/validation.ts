@@ -107,8 +107,7 @@ export const createContentValidation = [
     .withMessage(CONTENT_VALIDATION_MESSAGES.PROMPT_MAX_LENGTH),
 
   body('generatedText')
-    .notEmpty()
-    .withMessage(CONTENT_VALIDATION_MESSAGES.GENERATED_TEXT_REQUIRED),
+    .optional(),
 
   body('status')
     .optional()

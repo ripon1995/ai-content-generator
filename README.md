@@ -82,6 +82,7 @@
 ## Tech Stack
 
 ### Backend
+
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js
 - **Language**: TypeScript
@@ -90,11 +91,13 @@
 - **AI**: Google Generative AI (Gemini)
 
 ### Authentication & Security
+
 - **JWT**: jsonwebtoken
 - **Hashing**: bcryptjs
 - **Validation**: express-validator
 
 ### Development Tools
+
 - **Build**: TypeScript Compiler (tsc)
 - **Dev Server**: tsx (TypeScript execute)
 - **Process Manager**: Concurrently (for running multiple processes)
@@ -131,6 +134,7 @@
 ### Request Flow
 
 #### 1. Content Generation Request
+
 ```
 1. User sends POST /api/content/generate
 2. API validates request and authenticates user
@@ -179,11 +183,9 @@ ai-content-generator/
 │       │   │   └── validation.ts
 │       │   │
 │       │   ├── models/            # Mongoose models
-│       │   │   ├── content/
-│       │   │   │   └── content_model.ts
-│       │   │   ├── user/
-│       │   │   │   ├── user_model.ts
-│       │   │   │   └── refresh_token_model.ts
+│       │   │   ├── content_model.ts
+│       │   │   ├── user_model.ts
+│       │   │   ├── refresh_token_model.ts
 │       │   │   └── index.ts
 │       │   │
 │       │   ├── routes/            # API routes
@@ -376,6 +378,7 @@ pnpm run dev:all
 ```
 
 You should see:
+
 ```
 [0] 🚀 Server running on http://localhost:3000
 [0] 📡 API endpoint: http://localhost:3000/api/welcome
@@ -388,12 +391,14 @@ You should see:
 ### Option 2: Run Server and Worker Separately
 
 **Terminal 1 - API Server:**
+
 ```bash
 cd apps/server
 pnpm run dev
 ```
 
 **Terminal 2 - Worker Process:**
+
 ```bash
 cd apps/server
 pnpm run worker:dev
@@ -414,6 +419,7 @@ pnpm run start:all
 ## API Documentation
 
 ### Base URL
+
 ```
 http://localhost:3000/api
 ```
@@ -421,6 +427,7 @@ http://localhost:3000/api
 ### Authentication Endpoints
 
 #### 1. Register User
+
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -434,6 +441,7 @@ Content-Type: application/json
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -453,6 +461,7 @@ Content-Type: application/json
 ```
 
 #### 2. Login
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -464,6 +473,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -483,6 +493,7 @@ Content-Type: application/json
 ```
 
 #### 3. Refresh Token
+
 ```http
 POST /api/auth/refresh
 Content-Type: application/json
@@ -497,11 +508,13 @@ Content-Type: application/json
 ### Content Generation Endpoints
 
 > **Note**: All content endpoints require authentication. Include the access token in the Authorization header:
+>
 > ```
 > Authorization: Bearer <your_access_token>
 > ```
 
 #### 1. Queue Content Generation
+
 ```http
 POST /api/content/generate
 Authorization: Bearer <access_token>
@@ -515,6 +528,7 @@ Content-Type: application/json
 ```
 
 **Response (202 Accepted):**
+
 ```json
 {
   "success": true,
@@ -538,17 +552,20 @@ Content-Type: application/json
 ```
 
 **Content Types:**
+
 - `blog` - Blog posts and articles
 - `product` - Product descriptions
 - `social` - Social media content
 
 #### 2. Get Job Status
+
 ```http
 GET /api/content/job/:jobId/status
 Authorization: Bearer <access_token>
 ```
 
 **Response (Pending/Processing):**
+
 ```json
 {
   "success": true,
@@ -562,6 +579,7 @@ Authorization: Bearer <access_token>
 ```
 
 **Response (Completed):**
+
 ```json
 {
   "success": true,
@@ -582,6 +600,7 @@ Authorization: Bearer <access_token>
 ```
 
 **Response (Failed):**
+
 ```json
 {
   "success": true,
@@ -596,18 +615,21 @@ Authorization: Bearer <access_token>
 ```
 
 #### 3. Get All User Content
+
 ```http
 GET /api/content?page=1&limit=10&contentType=blog&status=draft
 Authorization: Bearer <access_token>
 ```
 
 **Query Parameters:**
+
 - `page` (optional) - Page number (default: 1)
 - `limit` (optional) - Items per page (default: 10)
 - `contentType` (optional) - Filter by type: blog, product, social
 - `status` (optional) - Filter by status: draft, published
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -639,12 +661,14 @@ Authorization: Bearer <access_token>
 ```
 
 #### 4. Get Content by ID
+
 ```http
 GET /api/content/:id
 Authorization: Bearer <access_token>
 ```
 
 #### 5. Update Content
+
 ```http
 PUT /api/content/:id
 Authorization: Bearer <access_token>
@@ -657,6 +681,7 @@ Content-Type: application/json
 ```
 
 #### 6. Delete Content
+
 ```http
 DELETE /api/content/:id
 Authorization: Bearer <access_token>
@@ -743,11 +768,13 @@ pnpm run type-check       # Check TypeScript types
 #### 1. MongoDB Connection Failed
 
 **Error:**
+
 ```
 MongoDB connection failed. Error details: connect ECONNREFUSED
 ```
 
 **Solutions:**
+
 - Ensure MongoDB is running: `mongod` (local) or check MongoDB Atlas connection
 - Verify `MONGO_URI` in `.env.local`
 - Check network connectivity
@@ -755,11 +782,13 @@ MongoDB connection failed. Error details: connect ECONNREFUSED
 #### 2. Redis Connection Failed
 
 **Error:**
+
 ```
 Error connecting to Redis: ECONNREFUSED
 ```
 
 **Solutions:**
+
 - Start Redis: `redis-server` (local) or check Redis Cloud connection
 - Verify `REDIS_URL` in `.env.local`
 - Check Redis is running: `redis-cli ping` (should return `PONG`)
@@ -767,11 +796,13 @@ Error connecting to Redis: ECONNREFUSED
 #### 3. Google Gemini API Error
 
 **Error:**
+
 ```
 Invalid or missing Gemini API key
 ```
 
 **Solutions:**
+
 - Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 - Add to `.env.local`: `GOOGLE_AI_API_KEY=your-key-here`
 - Ensure API key has proper permissions
@@ -779,6 +810,7 @@ Invalid or missing Gemini API key
 #### 4. Worker Not Processing Jobs
 
 **Solutions:**
+
 - Ensure worker process is running: `pnpm run worker:dev`
 - Check Redis connection
 - Verify Bull queue configuration
@@ -787,11 +819,13 @@ Invalid or missing Gemini API key
 #### 5. JWT Token Errors
 
 **Error:**
+
 ```
 Invalid token
 ```
 
 **Solutions:**
+
 - Ensure `JWT_SECRET` and `JWT_REFRESH_SECRET` are set in `.env.local`
 - Token may have expired (access tokens expire in 15 minutes)
 - Use refresh token endpoint to get new access token
@@ -826,6 +860,7 @@ This project is licensed under the MIT License.
 ## Support
 
 For issues and questions:
+
 - Create an issue on GitHub
 - Check existing documentation
 - Review troubleshooting section

@@ -10,4 +10,8 @@ export {
   ValidationException,
   InternalServerException,
   JWTTOkenGenerationException,
+  QueueServiceException,
+  AIServiceException,
+  ContentServiceException,
+  JobProcessorException,
 } from './http_exceptions';

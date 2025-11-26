@@ -2,7 +2,7 @@ import { Job } from 'bull';
 import { contentGenerationQueue } from '../config/queue';
 import { IContentGenerationJobData, IJobStatusResponse, BullJobStatus } from '../types/queue_interfaces';
 import { Content } from '../models';
-import { NotFoundException } from '../exceptions';
+import { NotFoundException, QueueServiceException } from '../exceptions';
 import logger from '../utils/logger';
 import { ContentGenerationStatus } from '../types/content_interfaces';
 
@@ -23,9 +23,9 @@ export class QueueService {
       logger.info(`Content generation job added to queue: ${job.id} for content: ${jobData.contentId}`);
 
       return job.id.toString();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to add job to queue:', error);
-      throw error;
+      throw new QueueServiceException(`Failed to add content generation job to queue: ${error.message}`);
     }
   }
 
@@ -40,9 +40,9 @@ export class QueueService {
       }
 
       return job;
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`Failed to get job ${jobId}:`, error);
-      throw error;
+      throw new QueueServiceException(`Failed to retrieve job ${jobId}: ${error.message}`);
     }
   }
 
@@ -135,9 +135,9 @@ export class QueueService {
         delayed: delayed.length,
         total: waiting.length + active.length + completed.length + failed.length + delayed.length,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get all jobs:', error);
-      throw error;
+      throw new QueueServiceException(`Failed to retrieve queue statistics: ${error.message}`);
     }
   }
 }

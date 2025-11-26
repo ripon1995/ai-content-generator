@@ -2,6 +2,7 @@ import { Job } from 'bull';
 import { IContentGenerationJobData } from '../types/queue_interfaces';
 import { Content } from '../models';
 import { aiService } from '../services/ai_service';
+import { JobProcessorException } from '../exceptions';
 import logger from '../utils/logger';
 import { ContentType } from '../types/content_interfaces';
 
@@ -11,7 +12,7 @@ const findContentById = async (contentId: string) => {
   const content = await Content.findById(contentId);
   if (!content) {
     logger.error(`Content not found: ${contentId}`);
-    throw new Error('Content not found');
+    throw new JobProcessorException('Content not found');
   }
   return content;
 };
@@ -24,7 +25,7 @@ const executeGeneration = async (contentId: string, contentType: ContentType, pr
   const generatedText = await aiService.generateContentWithValidation(prompt, contentType);
 
   if (!generatedText) {
-    throw new Error('AI service returned empty content');
+    throw new JobProcessorException('AI service returned empty content');
   }
 
   // Update content with generated text
@@ -50,8 +51,9 @@ const updateContentStatus = async (contentId: string, status: 'processing' | 'co
       await content.save();
       logger.info(`Content ${contentId} status updated to ${status}`);
     }
-  } catch (updateError) {
+  } catch (updateError: any) {
     logger.error(`Failed to update content status for ${contentId}:`, updateError);
+    throw new JobProcessorException(`Failed to update content status: ${updateError.message}`);
   }
 };
 

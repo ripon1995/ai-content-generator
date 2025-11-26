@@ -1,15 +1,8 @@
 import { getGenerativeModel, generationConfig, safetySettings } from '../config/ai';
 import { getPromptTemplate, SYSTEM_INSTRUCTION } from '../utils/ai_prompts';
 import { ContentType } from '../types/content_interfaces';
+import { AIServiceException } from '../exceptions';
 import logger from '../utils/logger';
-
-// custom exception for AI service errors
-export class AIServiceException extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AIServiceException';
-  }
-}
 
 // AI service to handle content generation
 export class AIService {
@@ -43,6 +36,7 @@ export class AIService {
       // send the formatted prompt
       const result = await chat.sendMessage(formattedPrompt);
       const response = result.response;
+      logger.info(response);
       const generatedText = response.text();
 
       if (!generatedText || generatedText.trim().length === 0) {

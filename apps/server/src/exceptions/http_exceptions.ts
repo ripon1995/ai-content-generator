@@ -57,3 +57,31 @@ export class JWTTOkenGenerationException extends BaseException {
     super(message, HTTP_STATUS_CODES.BAD_REQUEST)
   }
 }
+
+// exception: queue service
+export class QueueServiceException extends BaseException {
+  constructor(message: string = 'Queue service error') {
+    super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+  }
+}
+
+// exception: AI service
+export class AIServiceException extends BaseException {
+  constructor(message: string = 'AI service error') {
+    super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+  }
+}
+
+// exception: content service
+export class ContentServiceException extends BaseException {
+  constructor(message: string = 'Content service error') {
+    super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+  }
+}
+
+// exception: job processor
+export class JobProcessorException extends BaseException {
+  constructor(message: string = 'Job processing error') {
+    super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+  }
+}

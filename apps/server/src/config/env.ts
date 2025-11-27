@@ -13,6 +13,7 @@ interface EnvConfig {
   jwtSecret: string;
   jwtAccessTokenExpiresIn: number;
   jwtRefreshTokenExpiresIn: number;
+  redisUrl: string;
   redisHost: string;
   redisPort: number;
   redisPassword?: string;
@@ -38,6 +39,7 @@ export const env: EnvConfig = {
   jwtSecret: getEnvVar('JWT_SECRET'),
   jwtAccessTokenExpiresIn: parseInt(getEnvVar('JWT_ACCESS_TOKEN_EXPIRES_IN', '900'), 10),
   jwtRefreshTokenExpiresIn: parseInt(getEnvVar('JWT_REFRESH_TOKEN_EXPIRES_IN', '604800'), 10),
+  redisUrl: getEnvVar('REDIS_URL'),
   redisHost: getEnvVar('REDIS_HOST', 'localhost'),
   redisPort: parseInt(getEnvVar('REDIS_PORT', '6379'), 10),
   redisPassword: process.env.REDIS_PASSWORD,

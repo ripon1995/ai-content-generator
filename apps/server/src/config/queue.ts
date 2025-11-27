@@ -4,11 +4,13 @@ import logger from '../utils/logger';
 
 // queue configuration options
 const queueOptions = {
-  redis: {
-    host: env.redisHost,
-    port: env.redisPort,
-    password: env.redisPassword,
-  },
+  // need to improve
+  // redis: {
+  //   host: env.redisHost,
+  //   port: env.redisPort,
+  //   password: env.redisPassword,
+  // },
+  redis: env.redisUrl,
   defaultJobOptions: {
     attempts: 3, // retry failed jobs up to 3 times
     backoff: {

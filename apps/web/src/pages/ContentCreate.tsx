@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { contentApi } from '../api/content.api';
 import { ContentCreateRequest, ContentType } from '../types/content.types';
 import toast from 'react-hot-toast';
+import { Layout, BackButton, Button } from '../components';
 
 // Validation schema
 const contentSchema = z.object({
@@ -53,23 +54,10 @@ const ContentCreate: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">AI Content Generator</h1>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <Layout showUserInfo={false}>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <button
-            onClick={() => navigate('/content')}
-            className="text-primary hover:text-primary-dark font-medium flex items-center gap-2"
-          >
-            ← Back to Content List
-          </button>
+          <BackButton to="/content" />
         </div>
 
         <div className="card">
@@ -132,17 +120,17 @@ const ContentCreate: React.FC = () => {
 
             {/* Submit Buttons */}
             <div className="flex gap-3 pt-4">
-              <button type="submit" className="btn btn-primary flex-1" disabled={isSubmitting}>
-                {isSubmitting ? 'Generating...' : 'Generate Content'}
-              </button>
-              <button
+              <Button type="submit" variant="primary" fullWidth isLoading={isSubmitting}>
+                Generate Content
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => navigate('/content')}
-                className="btn btn-secondary"
                 disabled={isSubmitting}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
 
@@ -158,7 +146,7 @@ const ContentCreate: React.FC = () => {
           </div>
         </div>
       </main>
-    </div>
+    </Layout>
   );
 };
 

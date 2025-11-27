@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { contentApi } from '../api/content.api';
 import { Content, ContentType, ContentStatus } from '../types/content.types';
-import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { format, isValid, parseISO } from 'date-fns';
+import { Layout, Loader, StatusBadge, Button, EmptyState } from '../components';
 
 // Helper function to safely format dates
 const formatDate = (dateString: string | undefined): string => {
@@ -22,7 +22,6 @@ const formatDate = (dateString: string | undefined): string => {
 
 const ContentList: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
   const [contents, setContents] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,51 +66,15 @@ const ContentList: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">AI Content Generator</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              {user?.firstName} {user?.lastName}
-            </span>
-            <button onClick={handleLogout} className="btn btn-danger">
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <Layout>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header with Create Button */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">My Content</h2>
-          <button onClick={() => navigate('/content/new')} className="btn btn-primary">
+          <Button variant="primary" onClick={() => navigate('/content/new')}>
             + Create New Content
-          </button>
+          </Button>
         </div>
 
         {/* Filters */}
@@ -159,17 +122,14 @@ const ContentList: React.FC = () => {
 
         {/* Content List */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <p className="mt-4 text-gray-600">Loading content...</p>
-          </div>
+          <Loader text="Loading content..." />
         ) : contents.length === 0 ? (
-          <div className="card text-center py-12">
-            <p className="text-gray-600 mb-4">No content found</p>
-            <button onClick={() => navigate('/content/new')} className="btn btn-primary">
-              Create Your First Content
-            </button>
-          </div>
+          <EmptyState
+            title="No content found"
+            description="Start creating amazing AI-generated content"
+            actionLabel="Create Your First Content"
+            onAction={() => navigate('/content/new')}
+          />
         ) : (
           <div className="grid gap-4">
             {contents.map((content) => (
@@ -178,19 +138,9 @@ const ContentList: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">{content.title}</h3>
                     <div className="flex gap-3 mb-3">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-light text-primary-dark">
-                        {content.contentType}
-                      </span>
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(
-                          content.generationStatus
-                        )}`}
-                      >
-                        {content.generationStatus}
-                      </span>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {content.status}
-                      </span>
+                      <StatusBadge type="type" value={content.contentType} />
+                      <StatusBadge type="generation" value={content.generationStatus} />
+                      <StatusBadge type="content" value={content.status} />
                     </div>
                     <p className="text-sm text-gray-600 mb-2">
                       <span className="font-medium">Prompt:</span> {content.prompt}
@@ -242,7 +192,7 @@ const ContentList: React.FC = () => {
           </div>
         )}
       </main>
-    </div>
+    </Layout>
   );
 };
 

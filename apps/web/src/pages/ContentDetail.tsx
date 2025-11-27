@@ -5,6 +5,7 @@ import { Content } from '../types/content.types';
 import { useJobStatus } from '../hooks/useJobStatus';
 import toast from 'react-hot-toast';
 import { format, isValid, parseISO } from 'date-fns';
+import { Layout, Loader, StatusBadge, Button, BackButton, ErrorMessage } from '../components';
 
 // Helper function to safely format dates
 const formatDate = (dateString: string | undefined): string => {
@@ -115,29 +116,11 @@ const ContentDetail: React.FC = () => {
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="mt-4 text-gray-600">Loading content...</p>
-        </div>
-      </div>
+      <Layout showUserInfo={false}>
+        <Loader text="Loading content..." fullScreen />
+      </Layout>
     );
   }
 
@@ -146,23 +129,10 @@ const ContentDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">AI Content Generator</h1>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <Layout showUserInfo={false}>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <button
-            onClick={() => navigate('/content')}
-            className="text-primary hover:text-primary-dark font-medium flex items-center gap-2"
-          >
-            ← Back to Content List
-          </button>
+          <BackButton to="/content" />
         </div>
 
         {/* Content Card */}
@@ -171,20 +141,13 @@ const ContentDetail: React.FC = () => {
           <div className="border-b border-gray-200 pb-4 mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">{content.title}</h2>
             <div className="flex gap-3 mb-3">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-light text-primary-dark">
-                {content.contentType}
-              </span>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(
-                  content.generationStatus
-                )}`}
-              >
-                {content.generationStatus}
-                {isPolling && ' (polling...)'}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                {content.status}
-              </span>
+              <StatusBadge type="type" value={content.contentType} />
+              <StatusBadge
+                type="generation"
+                value={content.generationStatus}
+                isPolling={isPolling}
+              />
+              <StatusBadge type="content" value={content.status} />
             </div>
             <p className="text-sm text-gray-500">Created: {formatDate(content.createdAt)}</p>
           </div>
@@ -213,12 +176,10 @@ const ContentDetail: React.FC = () => {
                 </p>
               </div>
             ) : content.generationStatus === 'failed' ? (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <p className="text-red-800 font-medium">Generation failed</p>
-                {content.failureReason && (
-                  <p className="text-sm text-red-600 mt-2">Reason: {content.failureReason}</p>
-                )}
-              </div>
+              <ErrorMessage
+                title="Generation failed"
+                message={content.failureReason || 'Unknown error occurred'}
+              />
             ) : content.generatedText ? (
               <div className="bg-white border border-gray-200 rounded-md p-4">
                 <p className="text-gray-800 whitespace-pre-wrap">{content.generatedText}</p>
@@ -235,23 +196,19 @@ const ContentDetail: React.FC = () => {
             {content.generationStatus === 'completed' && (
               <>
                 {content.status === 'draft' ? (
-                  <button onClick={handlePublish} className="btn btn-primary" disabled={isUpdating}>
-                    {isUpdating ? 'Publishing...' : 'Publish'}
-                  </button>
+                  <Button variant="primary" onClick={handlePublish} isLoading={isUpdating}>
+                    Publish
+                  </Button>
                 ) : (
-                  <button
-                    onClick={handleUnpublish}
-                    className="btn btn-secondary"
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? 'Unpublishing...' : 'Unpublish'}
-                  </button>
+                  <Button variant="secondary" onClick={handleUnpublish} isLoading={isUpdating}>
+                    Unpublish
+                  </Button>
                 )}
               </>
             )}
-            <button onClick={handleDelete} className="btn btn-danger ml-auto">
+            <Button variant="danger" onClick={handleDelete} className="ml-auto">
               Delete
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -268,7 +225,7 @@ const ContentDetail: React.FC = () => {
           </div>
         )}
       </main>
-    </div>
+    </Layout>
   );
 };
 

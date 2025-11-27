@@ -1,3 +1,4 @@
+import express from 'express';
 import { connectDatabase } from './config/database';
 import { contentGenerationQueue } from './config/queue';
 import { processContentGeneration } from './jobs/content_generation_processor';
@@ -12,13 +13,25 @@ import { env } from './config/env';
 // register job processor with queue
 async function startWorker() {
   try {
-    // 1. Connect to database first
+    // connect to database first
     await connectDatabase();
 
     logger.info('Worker process starting...');
     logger.info(`Environment: ${env.nodeEnv}`);
 
-    // 2. Register the content generation processor
+    // dummy check to fix the build issue
+    const app = express();
+    const PORT = process.env.PORT || 10000;
+    app.get('/', (_req, res) => {
+      res.status(200).send('Worker is active and processing jobs');
+    });
+
+    // Start listening on the port
+    app.listen(PORT, () => {
+      logger.info(`Worker health check server listening on port ${PORT}`);
+    });
+
+    //register the content generation processor
     contentGenerationQueue.process(async (job) => {
       return await processContentGeneration(job);
     });
@@ -26,10 +39,10 @@ async function startWorker() {
     logger.info('Content generation processor registered');
     logger.info('Worker is now listening for jobs...');
 
-    // 3. Setup event handlers for job lifecycle
+    //setup event handlers for job lifecycle
     setupEventHandlers();
 
-    // 4. Setup graceful shutdown
+    // setup graceful shutdown
     setupGracefulShutdown();
   } catch (error) {
     logger.error('Failed to start worker:', error);
@@ -37,9 +50,6 @@ async function startWorker() {
   }
 }
 
-/**
- * Setup event handlers for queue events
- */
 function setupEventHandlers() {
   // job completed successfully
   contentGenerationQueue.on('completed', (job) => {
@@ -81,9 +91,6 @@ function setupEventHandlers() {
   });
 }
 
-/**
- * Setup graceful shutdown handlers
- */
 function setupGracefulShutdown() {
   const gracefulShutdown = async (signal: string) => {
     logger.info(`\n${signal} received. Starting graceful shutdown...`);

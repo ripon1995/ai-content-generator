@@ -154,72 +154,122 @@
 ```
 ai-content-generator/
 ├── apps/
-│   └── server/                    # Main server application
+│   ├── server/                    # Backend API server
+│   │   ├── src/
+│   │   │   ├── config/            # Configuration files
+│   │   │   │   ├── ai.ts          # Google Gemini AI config
+│   │   │   │   ├── database.ts    # MongoDB connection
+│   │   │   │   ├── env.ts         # Environment variables
+│   │   │   │   ├── queue.ts       # Bull queue setup
+│   │   │   │   └── redis.ts       # Redis client config
+│   │   │   │
+│   │   │   ├── controllers/       # Route controllers
+│   │   │   │   ├── auth_controller.ts
+│   │   │   │   └── content_controller.ts
+│   │   │   │
+│   │   │   ├── exceptions/        # Custom exceptions
+│   │   │   │   ├── base_exception.ts
+│   │   │   │   ├── http_exceptions.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── jobs/              # Queue job processors
+│   │   │   │   └── content_generation_processor.ts
+│   │   │   │
+│   │   │   ├── middleware/        # Express middleware
+│   │   │   │   ├── api_logging.ts
+│   │   │   │   ├── auth.ts
+│   │   │   │   ├── error_handler.ts
+│   │   │   │   └── validation.ts
+│   │   │   │
+│   │   │   ├── models/            # Mongoose models
+│   │   │   │   ├── content_model.ts
+│   │   │   │   ├── user_model.ts
+│   │   │   │   ├── refresh_token_model.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── routes/            # API routes
+│   │   │   │   ├── auth_routes.ts
+│   │   │   │   ├── content_routes.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── services/          # Business logic
+│   │   │   │   ├── ai_service.ts
+│   │   │   │   ├── auth_service.ts
+│   │   │   │   ├── content_service.ts
+│   │   │   │   └── queue_service.ts
+│   │   │   │
+│   │   │   ├── types/             # TypeScript interfaces
+│   │   │   │   ├── content_interfaces.ts
+│   │   │   │   ├── queue_interfaces.ts
+│   │   │   │   └── response_interfaces.ts
+│   │   │   │
+│   │   │   ├── utils/             # Utility functions
+│   │   │   │   ├── ai_prompts.ts
+│   │   │   │   ├── constants.ts
+│   │   │   │   ├── logger.ts
+│   │   │   │   ├── messages.ts
+│   │   │   │   └── response.ts
+│   │   │   │
+│   │   │   ├── index.ts           # API server entry point
+│   │   │   └── worker.ts          # Worker process entry point
+│   │   │
+│   │   ├── .env.example           # Environment variables template
+│   │   ├── .env.local             # Local environment variables
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── web/                       # Frontend React application
 │       ├── src/
-│       │   ├── config/            # Configuration files
-│       │   │   ├── ai.ts          # Google Gemini AI config
-│       │   │   ├── database.ts    # MongoDB connection
-│       │   │   ├── env.ts         # Environment variables
-│       │   │   ├── queue.ts       # Bull queue setup
-│       │   │   └── redis.ts       # Redis client config
+│       │   ├── api/               # API client & services
+│       │   │   ├── client.ts      # Axios instance with interceptors
+│       │   │   ├── auth.api.ts    # Authentication API calls
+│       │   │   └── content.api.ts # Content API calls
 │       │   │
-│       │   ├── controllers/       # Route controllers
-│       │   │   ├── auth_controller.ts
-│       │   │   └── content_controller.ts
+│       │   ├── components/        # Reusable components
+│       │   │   ├── Layout.tsx     # Main layout with header
+│       │   │   ├── Loader.tsx     # Loading spinner
+│       │   │   ├── StatusBadge.tsx # Status indicator badges
+│       │   │   ├── Button.tsx     # Reusable button
+│       │   │   ├── ErrorMessage.tsx # Error display
+│       │   │   ├── BackButton.tsx # Navigation back button
+│       │   │   ├── EmptyState.tsx # Empty state component
+│       │   │   └── index.ts       # Barrel exports
 │       │   │
-│       │   ├── exceptions/        # Custom exceptions
-│       │   │   ├── base_exception.ts
-│       │   │   ├── http_exceptions.ts
-│       │   │   └── index.ts
+│       │   ├── contexts/          # React Context providers
+│       │   │   └── AuthContext.tsx # Authentication context
 │       │   │
-│       │   ├── jobs/              # Queue job processors
-│       │   │   └── content_generation_processor.ts
+│       │   ├── hooks/             # Custom React hooks
+│       │   │   └── useJobStatus.ts # Job status polling hook
 │       │   │
-│       │   ├── middleware/        # Express middleware
-│       │   │   ├── api_logging.ts
-│       │   │   ├── auth.ts
-│       │   │   ├── error_handler.ts
-│       │   │   └── validation.ts
+│       │   ├── pages/             # Page components
+│       │   │   ├── Login.tsx      # Login page
+│       │   │   ├── Register.tsx   # Registration page
+│       │   │   ├── ContentList.tsx # Content list page
+│       │   │   ├── ContentCreate.tsx # Content creation page
+│       │   │   └── ContentDetail.tsx # Content detail page
 │       │   │
-│       │   ├── models/            # Mongoose models
-│       │   │   ├── content_model.ts
-│       │   │   ├── user_model.ts
-│       │   │   ├── refresh_token_model.ts
-│       │   │   └── index.ts
-│       │   │
-│       │   ├── routes/            # API routes
-│       │   │   ├── auth_routes.ts
-│       │   │   ├── content_routes.ts
-│       │   │   └── index.ts
-│       │   │
-│       │   ├── services/          # Business logic
-│       │   │   ├── ai_service.ts
-│       │   │   ├── auth_service.ts
-│       │   │   ├── content_service.ts
-│       │   │   └── queue_service.ts
-│       │   │
-│       │   ├── types/             # TypeScript interfaces
-│       │   │   ├── content_interfaces.ts
-│       │   │   ├── queue_interfaces.ts
-│       │   │   └── response_interfaces.ts
+│       │   ├── types/             # TypeScript types
+│       │   │   ├── auth.types.ts  # Auth-related types
+│       │   │   ├── content.types.ts # Content-related types
+│       │   │   └── api.types.ts   # API response types
 │       │   │
 │       │   ├── utils/             # Utility functions
-│       │   │   ├── ai_prompts.ts
-│       │   │   ├── constants.ts
-│       │   │   ├── logger.ts
-│       │   │   ├── messages.ts
-│       │   │   └── response.ts
+│       │   │   └── storage.ts     # localStorage helpers
 │       │   │
-│       │   ├── index.ts           # API server entry point
-│       │   └── worker.ts          # Worker process entry point
+│       │   ├── App.tsx            # Root component with routing
+│       │   ├── main.tsx           # Application entry point
+│       │   ├── index.css          # Global styles & Tailwind
+│       │   └── vite-env.d.ts      # Vite environment types
 │       │
+│       ├── public/                # Static assets
 │       ├── .env.example           # Environment variables template
 │       ├── .env.local             # Local environment variables
+│       ├── index.html             # HTML template
 │       ├── package.json
-│       └── tsconfig.json
-│
-├── docs/                          # Documentation
-│   └── AI_QUEUE_IMPLEMENTATION_STEPS.md
+│       ├── tsconfig.json
+│       ├── vite.config.ts         # Vite configuration
+│       ├── tailwind.config.js     # TailwindCSS configuration
+│       └── postcss.config.js      # PostCSS configuration
 │
 ├── package.json                   # Root package.json
 ├── pnpm-workspace.yaml           # pnpm workspace config

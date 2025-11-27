@@ -35,7 +35,7 @@ const Login: React.FC = () => {
         password: data.password,
       };
       await login(loginData);
-      navigate('/dashboard');
+      navigate('/content');
     } catch (error) {
       console.error('Login error:', error);
     } finally {

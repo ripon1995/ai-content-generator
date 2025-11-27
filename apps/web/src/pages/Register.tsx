@@ -45,7 +45,7 @@ const Register: React.FC = () => {
         password: data.password,
       };
       await registerUser(registerData);
-      navigate('/dashboard');
+      navigate('/content');
     } catch (error) {
       console.error('Registration error:', error);
     } finally {

@@ -50,7 +50,6 @@ export class ContentController {
     );
   }
 
-
   // get content list for authenticated user
   async getUserContent(req: Request, res: Response): Promise<Response> {
     const userId = (req as any).user.userId;
@@ -85,7 +84,6 @@ export class ContentController {
     );
   }
 
-
   // get content by ID
   async getContentById(req: Request, res: Response): Promise<Response> {
     const userId = (req as any).user.userId;
@@ -95,7 +93,12 @@ export class ContentController {
 
     const contentResponse: IContentResponse = this.transformContentToResponse(content);
 
-    return sendSuccess(res, contentResponse, 'Content retrieved successfully', HTTP_STATUS_CODES.OK);
+    return sendSuccess(
+      res,
+      contentResponse,
+      'Content retrieved successfully',
+      HTTP_STATUS_CODES.OK
+    );
   }
 
   // update content

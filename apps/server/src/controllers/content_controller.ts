@@ -6,6 +6,8 @@ import { IContentUpdate, IContentResponse } from '../types/content_interfaces';
 import logger from '../utils/logger';
 import { HTTP_STATUS_CODES } from '../utils/messages';
 
+// todo : remove magic string
+// todo : need to improve the filtering and searching
 export class ContentController {
   // private helper method to transform content document to response format
   private transformContentToResponse(content: any): IContentResponse {
@@ -125,7 +127,7 @@ export class ContentController {
 
     logger.info(`Content deleted successfully: ${id}`);
 
-    return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.OK);
+    return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.NO_CONTENT);
   }
 
   // queue content generation

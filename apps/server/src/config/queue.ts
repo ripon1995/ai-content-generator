@@ -13,7 +13,7 @@ const queueOptions: QueueOptions = {
       type: 'exponential',
       delay: 2000,
     },
-    removeOnComplete: true, // completed : clean the item from the queue
+    removeOnComplete: false, // completed : clean the item from the queue
     removeOnFail: false, // failed : let's keep the job for debugging
   },
 };

@@ -5,9 +5,10 @@ import { AIServiceException } from '../exceptions';
 import logger from '../utils/logger';
 
 // AI service to handle content generation
-export class AIService {
+// todo : improvement of the catch block
+class AIService {
   // generate content using Gemini AI
-  private async generateContent(prompt: string, contentType: ContentType): Promise<string> {
+  async generateContent(prompt: string, contentType: ContentType): Promise<string> {
     try {
       logger.info(`Generating ${contentType} content with Gemini AI`);
 
@@ -28,7 +29,11 @@ export class AIService {
           },
           {
             role: 'model',
-            parts: [{ text: 'Understood. I will generate high-quality content based on your requirements.' }],
+            parts: [
+              {
+                text: 'Understood. I will generate high-quality content based on your requirements.',
+              },
+            ],
           },
         ],
       });
@@ -44,7 +49,9 @@ export class AIService {
         throw new AIServiceException('AI service returned empty content');
       }
 
-      logger.info(`Successfully generated ${contentType} content (${generatedText.length} characters)`);
+      logger.info(
+        `Successfully generated ${contentType} content (${generatedText.length} characters)`
+      );
 
       return generatedText.trim();
     } catch (error: any) {
@@ -73,7 +80,9 @@ export class AIService {
       }
 
       // generic error
-      throw new AIServiceException(`AI content generation failed: ${error.message || 'Unknown error'}`);
+      throw new AIServiceException(
+        `AI content generation failed: ${error.message || 'Unknown error'}`
+      );
     }
   }
 
@@ -89,75 +98,6 @@ export class AIService {
       logger.error('Failed to format prompt:', error);
       throw new AIServiceException(`Failed to format prompt: ${error.message}`);
     }
-  }
-
-  // validate content quality (optional quality check)
-  private validateContentQuality(content: string, minLength: number = 50): boolean {
-    if (!content || content.trim().length < minLength) {
-      return false;
-    }
-
-    // check for placeholder text that might indicate incomplete generation
-    const placeholders = [
-      '[insert',
-      '[add',
-      '[write',
-      '[content here]',
-      '[placeholder]',
-      'lorem ipsum',
-    ];
-
-    const lowerContent = content.toLowerCase();
-    const hasPlaceholder = placeholders.some((placeholder) => lowerContent.includes(placeholder));
-
-    if (hasPlaceholder) {
-      logger.warn('Generated content contains placeholder text');
-      return false;
-    }
-
-    return true;
-  }
-
-  // generate content with quality validation
-  async generateContentWithValidation(
-    prompt: string,
-    contentType: ContentType,
-    maxRetries: number = 2
-  ): Promise<string> {
-    let attempts = 0;
-
-    while (attempts <= maxRetries) {
-      attempts++;
-
-      try {
-        const content = await this.generateContent(prompt, contentType);
-
-        // validate content quality
-        if (this.validateContentQuality(content)) {
-          return content;
-        }
-
-        logger.warn(`Generated content failed quality check (attempt ${attempts}/${maxRetries + 1})`);
-
-        if (attempts <= maxRetries) {
-          logger.info('Retrying content generation...');
-          continue;
-        }
-
-        // if all retries failed, return the last generated content anyway
-        logger.warn('Max retries reached, returning content despite quality concerns');
-        return content;
-      } catch (error) {
-        if (attempts <= maxRetries) {
-          logger.info(`Retrying after error (attempt ${attempts}/${maxRetries + 1})`);
-          continue;
-        }
-
-        throw error;
-      }
-    }
-
-    throw new AIServiceException('Failed to generate valid content after multiple attempts');
   }
 }
 

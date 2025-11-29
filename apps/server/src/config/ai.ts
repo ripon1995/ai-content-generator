@@ -47,6 +47,3 @@ export const safetySettings = [
     threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
   },
 ];
-
-// export AI client
-export default getGenerativeModel;

@@ -5,11 +5,6 @@ import { processContentGeneration } from './jobs/content_generation_processor';
 import logger from './utils/logger';
 import { env } from './config/env';
 
-/**
- * Worker process for processing background jobs
- * This runs separately from the main API server
- */
-
 // register job processor with queue
 async function startWorker() {
   try {

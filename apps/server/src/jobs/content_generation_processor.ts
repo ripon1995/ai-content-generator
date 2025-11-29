@@ -6,8 +6,6 @@ import { JobProcessorException } from '../exceptions';
 import logger from '../utils/logger';
 import { ContentType } from '../types/content_interfaces';
 
-
-
 const findContentById = async (contentId: string) => {
   const content = await Content.findById(contentId);
   if (!content) {
@@ -18,11 +16,11 @@ const findContentById = async (contentId: string) => {
 };
 
 const executeGeneration = async (contentId: string, contentType: ContentType, prompt: string) => {
-  // Find content again in case of failure after initial find
+  // get content
   const content = await findContentById(contentId);
 
   // Call AI service to generate content
-  const generatedText = await aiService.generateContentWithValidation(prompt, contentType);
+  const generatedText = await aiService.generateContent(prompt, contentType);
 
   if (!generatedText) {
     throw new JobProcessorException('AI service returned empty content');
@@ -34,10 +32,16 @@ const executeGeneration = async (contentId: string, contentType: ContentType, pr
   content.failureReason = undefined;
   await content.save();
 
-  logger.info(`Content generation completed for content: ${contentId} (${generatedText.length} characters)`);
+  logger.info(
+    `Content generation completed for content: ${contentId} (${generatedText.length} characters)`
+  );
 };
 
-const updateContentStatus = async (contentId: string, status: 'processing' | 'completed' | 'failed', failureReason?: string) => {
+const updateContentStatus = async (
+  contentId: string,
+  status: 'processing' | 'completed' | 'failed',
+  failureReason?: string
+) => {
   try {
     const content = await Content.findById(contentId);
     if (content) {
@@ -57,11 +61,10 @@ const updateContentStatus = async (contentId: string, status: 'processing' | 'co
   }
 };
 
-/**
- * Process content generation job
- * This function is called by the worker when a job is picked from the queue
- */
-export const processContentGeneration = async (job: Job<IContentGenerationJobData>): Promise<void> => {
+// process content generation job
+export const processContentGeneration = async (
+  job: Job<IContentGenerationJobData>
+): Promise<void> => {
   const { contentId, contentType, prompt } = job.data;
 
   logger.info(`Processing content generation job ${job.id} for content: ${contentId}`);
@@ -70,7 +73,7 @@ export const processContentGeneration = async (job: Job<IContentGenerationJobDat
     // find the content document
     await findContentById(contentId);
     // update status to processing
-    await updateContentStatus(contentId,'processing');
+    await updateContentStatus(contentId, 'processing');
 
     await executeGeneration(contentId, contentType, prompt);
   } catch (error: any) {

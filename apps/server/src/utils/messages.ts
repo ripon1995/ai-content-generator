@@ -31,6 +31,7 @@ export const HTTP_STATUS_CODES: THttpStatusCodes = {
   // status codes: successful
   OK: 200,
   CREATED: 201,
+  ACCEPTED: 202,
   NO_CONTENT: 204,
 
   // status codes: client side or validation

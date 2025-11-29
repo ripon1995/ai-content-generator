@@ -156,7 +156,7 @@ export class ContentController {
         expectedDelay: 60000, // 1 minute in milliseconds
       },
       'Content generation queued successfully',
-      202 // HTTP 202 Accepted
+      HTTP_STATUS_CODES.ACCEPTED
     );
   }
 

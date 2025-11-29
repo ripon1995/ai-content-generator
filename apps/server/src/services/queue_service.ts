@@ -14,7 +14,7 @@ import { ContentGenerationStatus } from '../types/content_interfaces';
 // acts as an interface of the queue
 // todo : improve error handling with custom errors
 // todo : break into smaller method
-export class QueueService {
+class QueueService {
   // add content generation job to queue with 1-minute delay
   async addContentGenerationJob(jobData: IContentGenerationJobData): Promise<string> {
     try {

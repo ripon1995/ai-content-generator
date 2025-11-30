@@ -3,7 +3,7 @@ import { env } from './env';
 import logger from '../utils/logger';
 
 // redis connection configuration
-const redisConfig = {
+export const redisConfig = {
   host: env.redisHost,
   port: env.redisPort,
   password: env.redisPassword,

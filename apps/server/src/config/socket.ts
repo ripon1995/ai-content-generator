@@ -4,7 +4,7 @@ import { env } from './env';
 import logger from '../utils/logger';
 
 const developmentUrls: string[] = ['http://localhost:5173', 'http://localhost:3000'];
-const productionUrls: string[] = [];
+const productionUrls: string[] = ['https://ai-content-generator-web.onrender.com'];
 
 // configuration for socket.io
 export const createSocketServer = (httpServer: HTTPServer): SocketIOServer => {

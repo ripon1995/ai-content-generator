@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, LoginRequest, RegisterRequest } from '../types/auth.types';
 import { authApi } from '../api/auth.api';
-import { setTokens, getUser, setUser, removeTokens } from '../utils/storage';
+import { setTokens, getUser, setUser, removeTokens, getAccessToken } from '../utils/storage';
+import { isTokenExpired } from '../utils/jwt';
 import toast from 'react-hot-toast';
 
 interface AuthState {
@@ -34,13 +35,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = () => {
       try {
         const storedUser = getUser();
-        if (storedUser) {
+        const accessToken = getAccessToken();
+
+        // Check if user exists AND token is valid (not expired)
+        if (storedUser && accessToken && !isTokenExpired(accessToken)) {
           setState({
             user: storedUser,
             isAuthenticated: true,
             isLoading: false,
           });
         } else {
+          // Token expired or doesn't exist - clear everything
+          if (accessToken && isTokenExpired(accessToken)) {
+            console.log('Token expired on app initialization, clearing auth');
+            removeTokens();
+            toast.error('Session expired. Please login again.');
+          }
+
           setState({
             user: null,
             isAuthenticated: false,
@@ -49,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
+        removeTokens();
         setState({
           user: null,
           isAuthenticated: false,

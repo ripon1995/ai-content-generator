@@ -4,12 +4,17 @@ import { contentGenerationQueue } from './config/queue';
 import { processContentGeneration } from './jobs/content_generation_processor';
 import logger from './utils/logger';
 import { env } from './config/env';
+import { pubSubService } from './services/pubsub_service';
 
 // register job processor with queue
 async function startWorker() {
   try {
     // connect to database first
     await connectDatabase();
+
+    // initialize Redis Pub/Sub service for cross-process communication
+    pubSubService.initialize();
+    logger.info('Redis Pub/Sub service initialized');
 
     logger.info('Worker process starting...');
     logger.info(`Environment: ${env.nodeEnv}`);
@@ -94,6 +99,10 @@ function setupGracefulShutdown() {
       // close the queue gracefully
       await contentGenerationQueue.close();
       logger.info('Queue closed successfully');
+
+      // shutdown pub/sub service
+      await pubSubService.shutdown();
+      logger.info('PubSub service closed successfully');
 
       // exit process
       logger.info('Worker process terminated gracefully');

@@ -5,6 +5,7 @@ import { aiService } from '../services/ai_service';
 import { JobProcessorException } from '../exceptions';
 import logger from '../utils/logger';
 import { ContentType } from '../types/content_interfaces';
+import { pubSubService } from '../services/pubsub_service';
 
 const findContentById = async (contentId: string) => {
   const content = await Content.findById(contentId);
@@ -15,7 +16,12 @@ const findContentById = async (contentId: string) => {
   return content;
 };
 
-const executeGeneration = async (contentId: string, contentType: ContentType, prompt: string) => {
+const executeGeneration = async (
+  contentId: string,
+  contentType: ContentType,
+  prompt: string,
+  jobId: string
+) => {
   // get content
   const content = await findContentById(contentId);
 
@@ -35,6 +41,17 @@ const executeGeneration = async (contentId: string, contentType: ContentType, pr
   logger.info(
     `Content generation completed for content: ${contentId} (${generatedText.length} characters)`
   );
+
+  // publish completed : via pub/sub
+  await pubSubService.publishContentGenerationCompleted(content.userId.toString(), {
+    contentId: content._id.toString(),
+    jobId,
+    status: 'completed',
+    title: content.title,
+    contentType: content.contentType,
+    generatedText: content.generatedText,
+    timestamp: new Date(),
+  });
 };
 
 const updateContentStatus = async (
@@ -66,20 +83,47 @@ export const processContentGeneration = async (
   job: Job<IContentGenerationJobData>
 ): Promise<void> => {
   const { contentId, contentType, prompt } = job.data;
+  const jobId = job.id?.toString() || 'unknown';
 
-  logger.info(`Processing content generation job ${job.id} for content: ${contentId}`);
+  logger.info(`Processing content generation job ${jobId} for content: ${contentId}`);
 
   try {
     // find the content document
-    await findContentById(contentId);
+    const content = await findContentById(contentId);
+
     // update status to processing
     await updateContentStatus(contentId, 'processing');
 
-    await executeGeneration(contentId, contentType, prompt);
+    // publish processing : via pub/sub
+    await pubSubService.publishContentGenerationStarted(content.userId.toString(), {
+      contentId: content._id.toString(),
+      jobId,
+      status: 'processing',
+      timestamp: new Date(),
+    });
+    // start the execution
+    await executeGeneration(contentId, contentType, prompt, jobId);
   } catch (error: any) {
     logger.error(`Content generation failed for content ${contentId}:`, error);
     const failureReason = error.message || 'Unknown error occurred during content generation';
     await updateContentStatus(contentId, 'failed', failureReason);
+
+    // Get content to publish failed event
+    try {
+      const content = await Content.findById(contentId);
+      if (content) {
+        // publish failed : via pub/sub
+        await pubSubService.publishContentGenerationFailed(content.userId.toString(), {
+          contentId: content._id.toString(),
+          jobId,
+          status: 'failed',
+          failureReason,
+          timestamp: new Date(),
+        });
+      }
+    } catch (publishError) {
+      logger.error('Failed to publish content generation failed event:', publishError);
+    }
 
     // re-throw error so Bull can handle retries
     throw error;

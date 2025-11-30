@@ -31,6 +31,38 @@ const getEnvVar = (key: string, defaultValue?: string): string => {
   return value;
 };
 
+// parse Redis URL if provided (Render-style: redis://host:port)
+const parseRedisUrl = (redisUrl?: string) => {
+  if (!redisUrl) {
+    return {
+      host: getEnvVar('REDIS_HOST', 'localhost'),
+      port: parseInt(getEnvVar('REDIS_PORT', '6379'), 10),
+      password: process.env.REDIS_PASSWORD,
+    };
+  }
+
+  try {
+    // parse URL like: redis://red-abc123:6379 or redis://:password@red-abc123:6379
+    const url = new URL(redisUrl);
+    return {
+      host: url.hostname,
+      port: parseInt(url.port || '6379', 10),
+      password: url.password || process.env.REDIS_PASSWORD,
+    };
+  } catch (error) {
+    // If parsing fails, fall back to individual env vars
+    console.warn('Failed to parse REDIS_URL, using individual env vars:', error);
+    return {
+      host: getEnvVar('REDIS_HOST', 'localhost'),
+      port: parseInt(getEnvVar('REDIS_PORT', '6379'), 10),
+      password: process.env.REDIS_PASSWORD,
+    };
+  }
+};
+
+// parse Redis connection details from REDIS_URL or individual vars
+const redisConfig = parseRedisUrl(process.env.REDIS_URL);
+
 export const env: EnvConfig = {
   port: parseInt(getEnvVar('PORT', '5000'), 10),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
@@ -39,10 +71,10 @@ export const env: EnvConfig = {
   jwtSecret: getEnvVar('JWT_SECRET'),
   jwtAccessTokenExpiresIn: parseInt(getEnvVar('JWT_ACCESS_TOKEN_EXPIRES_IN', '900'), 10),
   jwtRefreshTokenExpiresIn: parseInt(getEnvVar('JWT_REFRESH_TOKEN_EXPIRES_IN', '604800'), 10),
-  redisUrl: getEnvVar('REDIS_URL'),
-  redisHost: getEnvVar('REDIS_HOST', 'localhost'),
-  redisPort: parseInt(getEnvVar('REDIS_PORT', '6379'), 10),
-  redisPassword: process.env.REDIS_PASSWORD,
+  redisUrl: process.env.REDIS_URL || `redis://${redisConfig.host}:${redisConfig.port}`,
+  redisHost: redisConfig.host,
+  redisPort: redisConfig.port,
+  redisPassword: redisConfig.password,
   geminiApiKey: getEnvVar('GEMINI_API_KEY'),
   geminiModel: getEnvVar('GEMINI_MODEL', 'gemini-1.5-flash'),
   geminiTemperature: parseFloat(getEnvVar('GEMINI_TEMPERATURE', '0.7')),

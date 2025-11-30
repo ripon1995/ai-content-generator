@@ -17,7 +17,13 @@ import {
 } from '../types/socket.types';
 
 // socket server URL from environment or default
-const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+// remove /api suffix if present since Socket.IO connects to root
+const getSocketUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+  return apiUrl.replace(/\/api$/, '');
+};
+
+const SOCKET_URL = getSocketUrl();
 
 interface SocketState {
   socket: Socket | null;

@@ -28,6 +28,28 @@ app.use('/api', apiRoutes);
 // Global Error Handler (must be after all routes)
 app.use(errorHandler);
 
+function gearUpSocketServer() {
+  const socketIO = createSocketServer(httpServer);
+  socketService.initialize(socketIO);
+  logger.info('========= Socket.IO geared up ========');
+}
+
+async function gearUpPubSub() {
+  pubSubService.initialize();
+  await setupPubSubSubscriptions();
+  logger.info('');
+  logger.info('========= Redis Pub/Sub subscriptions geared up ========');
+}
+
+function gearUpListener() {
+  httpServer.listen(env.port, () => {
+    logger.info(`Server running on http://localhost:${env.port}`);
+    logger.info(`WebSocket server ready`);
+    logger.info(`Redis Pub/Sub ready`);
+    logger.info(`=========Environment: ${env.nodeEnv}===========`);
+  });
+}
+
 // Start server function
 async function startServer() {
   try {
@@ -35,24 +57,13 @@ async function startServer() {
     await connectDatabase();
 
     // 2. Initialize Socket.IO
-    const io = createSocketServer(httpServer);
-    socketService.initialize(io);
-    logger.info('✅ Socket.IO initialized');
+    gearUpSocketServer();
 
     // 3. Initialize Redis Pub/Sub and subscribe to events
-    pubSubService.initialize();
-    await setupPubSubSubscriptions();
-    logger.info('✅ Redis Pub/Sub subscriptions initialized');
+    gearUpPubSub();
 
     // 4. Start HTTP server with Socket.IO
-    httpServer.listen(env.port, () => {
-      logger.info(`🚀 Server running on http://localhost:${env.port}`);
-      logger.info(`📡 API endpoint: http://localhost:${env.port}/api/welcome`);
-      logger.info(`🔌 WebSocket server ready`);
-      logger.info(`📮 Redis Pub/Sub ready`);
-      logger.info(`🌍 Environment: ${env.nodeEnv}`);
-    });
-
+    gearUpListener();
     // 5. Setup graceful shutdown
     setupGracefulShutdown(httpServer);
   } catch (error) {

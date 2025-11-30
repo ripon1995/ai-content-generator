@@ -18,7 +18,7 @@ export const createSocketServer = (httpServer: HTTPServer): SocketIOServer => {
     pingInterval: 25000, // server sends ping request after every 25 seconds
   });
 
-  logger.info('Socket.IO server configured successfully');
+  logger.info('=========Socket.IO server configured successfully========');
 
   return socketIo;
 };

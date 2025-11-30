@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { env } from '../config/env';
+import { redisConfig } from '../config/redis';
 import logger from '../utils/logger';
 import {
   IContentGenerationStartedPayload,
@@ -33,31 +33,40 @@ class PubSubService {
       return;
     }
 
-    // create separate redis clients for publisher and subscriber
-    const redisConfig = {
-      host: env.redisHost,
-      port: env.redisPort,
-      password: env.redisPassword,
-      retryStrategy: (times: number) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-      },
-    };
+    try {
+      // create separate redis clients for publisher and subscriber
+      // reuse the same config as main Redis client for consistency
+      const pubSubConfig = {
+        ...redisConfig,
+        maxRetriesPerRequest: 10, // allow retries for pub/sub
+        enableReadyCheck: true,
+      };
 
-    // create publisher
-    this.publisher = new Redis(redisConfig);
-    this.publisher.on('connect', () => logger.info('Redis publisher connecting...'));
-    this.publisher.on('ready', () => logger.info('Redis publisher ready'));
-    this.publisher.on('error', (error) => logger.error('Redis publisher error:', error));
+      // create publisher
+      this.publisher = new Redis(pubSubConfig);
+      this.publisher.on('connect', () => logger.info('Redis publisher connecting...'));
+      this.publisher.on('ready', () => logger.info('Redis publisher ready'));
+      this.publisher.on('error', (error) => {
+        logger.error('Redis publisher error:', error);
+        // Don't crash the app if Redis Pub/Sub fails
+      });
 
-    // create subscriber
-    this.subscriber = new Redis(redisConfig);
-    this.subscriber.on('connect', () => logger.info('Redis subscriber connecting...'));
-    this.subscriber.on('ready', () => logger.info('Redis subscriber ready'));
-    this.subscriber.on('error', (error) => logger.error('Redis subscriber error:', error));
+      // create subscriber
+      this.subscriber = new Redis(pubSubConfig);
+      this.subscriber.on('connect', () => logger.info('Redis subscriber connecting...'));
+      this.subscriber.on('ready', () => logger.info('Redis subscriber ready'));
+      this.subscriber.on('error', (error) => {
+        logger.error('Redis subscriber error:', error);
+        // Don't crash the app if Redis Pub/Sub fails
+      });
 
-    this.isInitialized = true;
-    logger.info('PubSubService initialized successfully');
+      this.isInitialized = true;
+      logger.info('PubSubService initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize PubSubService:', error);
+      // Graceful degradation - app can still work without real-time updates
+      this.isInitialized = false;
+    }
   }
 
   // publish content generation started event

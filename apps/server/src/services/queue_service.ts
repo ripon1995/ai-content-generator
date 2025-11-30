@@ -1,36 +1,40 @@
 import { Job } from 'bull';
 import { contentGenerationQueue } from '../config/queue';
-import { IContentGenerationJobData, IJobStatusResponse, BullJobStatus } from '../types/queue_interfaces';
+import {
+  IContentGenerationJobData,
+  IJobStatusResponse,
+  BullJobStatus,
+} from '../types/queue_interfaces';
 import { Content } from '../models';
 import { NotFoundException, QueueServiceException } from '../exceptions';
 import logger from '../utils/logger';
 import { ContentGenerationStatus } from '../types/content_interfaces';
 
 // queue service to handle job operations
-export class QueueService {
+// acts as an interface of the queue
+// todo : improve error handling with custom errors
+// todo : break into smaller method
+class QueueService {
   // add content generation job to queue with 1-minute delay
   async addContentGenerationJob(jobData: IContentGenerationJobData): Promise<string> {
     try {
-      const job = await contentGenerationQueue.add(jobData, {
-        delay: 60000, // 1 minute delay (60000 milliseconds)
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-      });
+      const job = await contentGenerationQueue.add(jobData);
 
-      logger.info(`Content generation job added to queue: ${job.id} for content: ${jobData.contentId}`);
+      logger.info(
+        `Content generation job added to queue: ${job.id} for content: ${jobData.contentId}`
+      );
 
       return job.id.toString();
     } catch (error: any) {
       logger.error('Failed to add job to queue:', error);
-      throw new QueueServiceException(`Failed to add content generation job to queue: ${error.message}`);
+      throw new QueueServiceException(
+        `Failed to add content generation job to queue: ${error.message}`
+      );
     }
   }
 
   // get job by ID
-  async getJobById(jobId: string): Promise<Job<IContentGenerationJobData> | null> {
+  private async getJobById(jobId: string): Promise<Job<IContentGenerationJobData> | null> {
     try {
       const job = await contentGenerationQueue.getJob(jobId);
 
@@ -66,7 +70,10 @@ export class QueueService {
     }
 
     // map Bull job status to our generation status
-    const generationStatus = this.mapBullStatusToGenerationStatus(bullJobStatus, content.generationStatus);
+    const generationStatus = this.mapBullStatusToGenerationStatus(
+      bullJobStatus,
+      content.generationStatus
+    );
 
     const response: IJobStatusResponse = {
       jobId: jobId,
@@ -75,6 +82,7 @@ export class QueueService {
     };
 
     // include content details if job is completed
+    // otherwise no need to add the content detail
     if (generationStatus === 'completed') {
       response.content = {
         id: content._id.toString(),
@@ -113,31 +121,6 @@ export class QueueService {
         return 'failed';
       default:
         return 'pending';
-    }
-  }
-
-  // get all jobs (for debugging/admin purposes)
-  async getAllJobs() {
-    try {
-      const [waiting, active, completed, failed, delayed] = await Promise.all([
-        contentGenerationQueue.getWaiting(),
-        contentGenerationQueue.getActive(),
-        contentGenerationQueue.getCompleted(),
-        contentGenerationQueue.getFailed(),
-        contentGenerationQueue.getDelayed(),
-      ]);
-
-      return {
-        waiting: waiting.length,
-        active: active.length,
-        completed: completed.length,
-        failed: failed.length,
-        delayed: delayed.length,
-        total: waiting.length + active.length + completed.length + failed.length + delayed.length,
-      };
-    } catch (error: any) {
-      logger.error('Failed to get all jobs:', error);
-      throw new QueueServiceException(`Failed to retrieve queue statistics: ${error.message}`);
     }
   }
 }

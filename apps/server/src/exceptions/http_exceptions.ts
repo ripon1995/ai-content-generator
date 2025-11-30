@@ -6,6 +6,7 @@ import { HTTP_STATUS_CODES } from '../utils/messages';
 export class BadRequestException extends BaseException {
   constructor(message: string = 'Bad Request', errors?: IErrorDetail[]) {
     super(message, HTTP_STATUS_CODES.BAD_REQUEST, errors);
+    Object.setPrototypeOf(this, BadRequestException.prototype);
   }
 }
 
@@ -13,6 +14,7 @@ export class BadRequestException extends BaseException {
 export class UnauthorizedException extends BaseException {
   constructor(message: string = 'Unauthorized') {
     super(message, HTTP_STATUS_CODES.UNAUTHORIZED);
+    Object.setPrototypeOf(this, UnauthorizedException.prototype);
   }
 }
 
@@ -20,6 +22,7 @@ export class UnauthorizedException extends BaseException {
 export class ForbiddenException extends BaseException {
   constructor(message: string = 'Forbidden') {
     super(message, HTTP_STATUS_CODES.FORBIDDEN);
+    Object.setPrototypeOf(this, ForbiddenException.prototype);
   }
 }
 
@@ -27,6 +30,7 @@ export class ForbiddenException extends BaseException {
 export class NotFoundException extends BaseException {
   constructor(message: string = 'Resource not found') {
     super(message, HTTP_STATUS_CODES.NOT_FOUND);
+    Object.setPrototypeOf(this, NotFoundException.prototype);
   }
 }
 
@@ -34,6 +38,7 @@ export class NotFoundException extends BaseException {
 export class ConflictException extends BaseException {
   constructor(message: string = 'Resource already exists') {
     super(message, HTTP_STATUS_CODES.CONFLICT);
+    Object.setPrototypeOf(this, ConflictException.prototype);
   }
 }
 
@@ -41,6 +46,7 @@ export class ConflictException extends BaseException {
 export class ValidationException extends BaseException {
   constructor(errors?: IErrorDetail[], message: string = 'Validation failed') {
     super(message, HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY, errors);
+    Object.setPrototypeOf(this, ValidationException.prototype);
   }
 }
 
@@ -48,13 +54,15 @@ export class ValidationException extends BaseException {
 export class InternalServerException extends BaseException {
   constructor(message: string = 'Internal server error') {
     super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+    Object.setPrototypeOf(this, InternalServerException.prototype);
   }
 }
 
 // exception: token generation
 export class JWTTOkenGenerationException extends BaseException {
   constructor(message: string = 'Failed to generate token') {
-    super(message, HTTP_STATUS_CODES.BAD_REQUEST)
+    super(message, HTTP_STATUS_CODES.BAD_REQUEST);
+    Object.setPrototypeOf(this, JWTTOkenGenerationException.prototype);
   }
 }
 
@@ -62,6 +70,7 @@ export class JWTTOkenGenerationException extends BaseException {
 export class QueueServiceException extends BaseException {
   constructor(message: string = 'Queue service error') {
     super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+    Object.setPrototypeOf(this, QueueServiceException.prototype);
   }
 }
 
@@ -69,6 +78,7 @@ export class QueueServiceException extends BaseException {
 export class AIServiceException extends BaseException {
   constructor(message: string = 'AI service error') {
     super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+    Object.setPrototypeOf(this, AIServiceException.prototype);
   }
 }
 
@@ -76,6 +86,7 @@ export class AIServiceException extends BaseException {
 export class ContentServiceException extends BaseException {
   constructor(message: string = 'Content service error') {
     super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+    Object.setPrototypeOf(this, ContentServiceException.prototype);
   }
 }
 
@@ -83,5 +94,6 @@ export class ContentServiceException extends BaseException {
 export class JobProcessorException extends BaseException {
   constructor(message: string = 'Job processing error') {
     super(message, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR);
+    Object.setPrototypeOf(this, JobProcessorException.prototype);
   }
 }

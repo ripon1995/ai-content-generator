@@ -30,11 +30,16 @@ winston.addColors(colors);
 
 // Define log format
 const format = winston.format.combine(
+  winston.format.errors({ stack: true }),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf(
-    (info) => `${info.timestamp} [${info.level}]: ${info.message}`
-  )
+  winston.format.printf(({ level, message, timestamp, stack }) => {
+    // Print the stack if it exists
+    if (stack) {
+      return `${timestamp} [${level}]: ${message}\n${stack}`;
+    }
+    return `${timestamp} [${level}]: ${message}`;
+  })
 );
 
 // Define transports
@@ -47,9 +52,6 @@ const transports = [
     filename: 'logs/error.log',
     level: 'error',
   }),
-
-  // All logs - write to file
-  new winston.transports.File({ filename: 'logs/combined.log' }),
 ];
 
 // Create the logger

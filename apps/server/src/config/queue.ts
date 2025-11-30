@@ -1,29 +1,25 @@
-import Queue from 'bull';
+import Queue, { QueueOptions } from 'bull';
 import { env } from './env';
 import logger from '../utils/logger';
 
+// todo : can be improved the event listener based on the use case
 // queue configuration options
-const queueOptions = {
-  // need to improve
-  // redis: {
-  //   host: env.redisHost,
-  //   port: env.redisPort,
-  //   password: env.redisPassword,
-  // },
+const queueOptions: QueueOptions = {
   redis: env.redisUrl,
   defaultJobOptions: {
-    attempts: 3, // retry failed jobs up to 3 times
+    delay: 60000, // 1 minute delay : same for all the jobs so placing here
+    attempts: 3,
     backoff: {
       type: 'exponential',
-      delay: 2000, // start with 2 seconds delay
+      delay: 2000,
     },
-    removeOnComplete: false, // keep completed jobs for history
-    removeOnFail: false, // keep failed jobs for debugging
+    removeOnComplete: false, // completed : can be cleaned the item from the queue
+    removeOnFail: false, // failed : let's keep the job for debugging
   },
 };
-
+const queue_name: string = 'content-generation';
 // create content generation queue
-export const contentGenerationQueue = new Queue('content-generation', queueOptions);
+export const contentGenerationQueue = new Queue(queue_name, queueOptions);
 
 // queue event listeners
 contentGenerationQueue.on('error', (error: Error) => {

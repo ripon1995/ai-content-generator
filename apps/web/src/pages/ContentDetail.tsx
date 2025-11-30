@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contentApi } from '../api/content.api';
 import { Content } from '../types/content.types';
-import { useJobStatus } from '../hooks/useJobStatus';
+import { useSocket } from '../hooks/useSocket';
 import toast from 'react-hot-toast';
 import { format, isValid, parseISO } from 'date-fns';
 import { Layout, Loader, StatusBadge, Button, BackButton, ErrorMessage } from '../components';
@@ -28,12 +28,59 @@ const ContentDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Determine if we should poll for job status
-  const shouldPoll =
-    content?.generationStatus === 'pending' || content?.generationStatus === 'processing';
-
-  // Use job status polling hook
-  const { jobStatus, isPolling } = useJobStatus(content?.jobId, shouldPoll);
+  // use WebSocket for real-time updates
+  const { isConnected } = useSocket({
+    onGenerationStarted: (payload) => {
+      // only update if this is the content we're viewing
+      if (payload.contentId === id) {
+        console.log('[ContentDetail] Generation started:', payload);
+        toast.success('Content generation started!');
+        // update content status
+        setContent((prev) =>
+          prev
+            ? {
+                ...prev,
+                generationStatus: payload.status,
+              }
+            : null
+        );
+      }
+    },
+    onGenerationCompleted: (payload) => {
+      // only update if this is the content we're viewing
+      if (payload.contentId === id) {
+        console.log('[ContentDetail] Generation completed:', payload);
+        toast.success('Content generation completed!');
+        // update content with generated text
+        setContent((prev) =>
+          prev
+            ? {
+                ...prev,
+                generationStatus: payload.status,
+                generatedText: payload.generatedText,
+              }
+            : null
+        );
+      }
+    },
+    onGenerationFailed: (payload) => {
+      // only update if this is the content we're viewing
+      if (payload.contentId === id) {
+        console.log('[ContentDetail] Generation failed:', payload);
+        toast.error('Content generation failed');
+        // update content with failure reason
+        setContent((prev) =>
+          prev
+            ? {
+                ...prev,
+                generationStatus: payload.status,
+                failureReason: payload.failureReason,
+              }
+            : null
+        );
+      }
+    },
+  });
 
   // Fetch content details
   const fetchContent = async () => {
@@ -55,17 +102,6 @@ const ContentDetail: React.FC = () => {
   useEffect(() => {
     fetchContent();
   }, [id]);
-
-  // Update content when job status changes
-  useEffect(() => {
-    if (jobStatus && jobStatus.status === 'completed') {
-      toast.success('Content generation completed!');
-      fetchContent(); // Refresh content to get the generated text
-    } else if (jobStatus && jobStatus.status === 'failed') {
-      toast.error('Content generation failed');
-      fetchContent();
-    }
-  }, [jobStatus]);
 
   const handlePublish = async () => {
     if (!content) return;
@@ -145,7 +181,11 @@ const ContentDetail: React.FC = () => {
               <StatusBadge
                 type="generation"
                 value={content.generationStatus}
-                isPolling={isPolling}
+                isPolling={
+                  (content.generationStatus === 'pending' ||
+                    content.generationStatus === 'processing') &&
+                  isConnected
+                }
               />
               <StatusBadge type="content" value={content.status} />
             </div>
@@ -217,11 +257,14 @@ const ContentDetail: React.FC = () => {
           <div className="mt-6 card bg-gray-50">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Job Information</h3>
             <p className="text-xs text-gray-600">Job ID: {content.jobId}</p>
-            {isPolling && (
-              <p className="text-xs text-blue-600 mt-1">
-                Polling for status updates every 5 seconds...
-              </p>
-            )}
+            <p className={`text-xs mt-1 ${isConnected ? 'text-green-600' : 'text-gray-600'}`}>
+              WebSocket: {isConnected ? 'Connected' : 'Disconnected'}
+            </p>
+            {(content.generationStatus === 'pending' ||
+              content.generationStatus === 'processing') &&
+              isConnected && (
+                <p className="text-xs text-blue-600 mt-1">Listening for real-time updates...</p>
+              )}
           </div>
         )}
       </main>

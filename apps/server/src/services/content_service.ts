@@ -1,9 +1,5 @@
 import { Content } from '../models';
-import {
-  IContentDocument,
-  IContentInput,
-  IContentUpdate,
-} from '../types/content_interfaces';
+import { IContentDocument, IContentInput, IContentUpdate } from '../types/content_interfaces';
 import { NotFoundException, ForbiddenException, ContentServiceException } from '../exceptions';
 import logger from '../utils/logger';
 import { Types } from 'mongoose';
@@ -21,7 +17,11 @@ export class ContentService {
   }
 
   // private helper method to validate content ownership
-  private validateContentOwnership(content: IContentDocument, userId: string, contentId: string): void {
+  private validateContentOwnership(
+    content: IContentDocument,
+    userId: string,
+    contentId: string
+  ): void {
     if (content.userId.toString() !== userId) {
       logger.warn(`Unauthorized access attempt to content: ${contentId} by user: ${userId}`);
       throw new ForbiddenException('You do not have permission to access this content');
@@ -31,7 +31,8 @@ export class ContentService {
   // create new content
   async createContent(contentData: IContentInput): Promise<IContentDocument> {
     try {
-      const { userId, title, contentType, prompt, generatedText, status, jobId, generationStatus } = contentData;
+      const { userId, title, contentType, prompt, generatedText, status, jobId, generationStatus } =
+        contentData;
 
       // create new content
       const newContent = await Content.create({
@@ -141,7 +142,8 @@ export class ContentService {
       if (updateData.prompt !== undefined) content!.prompt = updateData.prompt;
       if (updateData.generatedText !== undefined) content!.generatedText = updateData.generatedText;
       if (updateData.status !== undefined) content!.status = updateData.status;
-      if (updateData.generationStatus !== undefined) content!.generationStatus = updateData.generationStatus;
+      if (updateData.generationStatus !== undefined)
+        content!.generationStatus = updateData.generationStatus;
       if (updateData.failureReason !== undefined) content!.failureReason = updateData.failureReason;
 
       await content!.save();
@@ -185,7 +187,9 @@ export class ContentService {
   }
 
   // queue content generation
-  async queueContentGeneration(contentData: IContentInput): Promise<{ content: IContentDocument; jobId: string }> {
+  async queueContentGeneration(
+    contentData: IContentInput
+  ): Promise<{ content: IContentDocument; jobId: string }> {
     try {
       const { userId, title, contentType, prompt } = contentData;
 

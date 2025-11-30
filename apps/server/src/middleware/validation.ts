@@ -1,12 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import { IErrorDetail } from '../types/response_interfaces';
-import { REGISTRATION_VALIDATION_MESSAGES, LOGIN_VALIDATION_MESSAGES, CONTENT_VALIDATION_MESSAGES } from '../utils/messages';
-import { REGEX_PATTERN, CONSTANT_VALUES} from '../utils/constants';
+import {
+  REGISTRATION_VALIDATION_MESSAGES,
+  LOGIN_VALIDATION_MESSAGES,
+  CONTENT_VALIDATION_MESSAGES,
+  REFRESH_TOKEN_MESSAGES,
+} from '../utils/messages';
+import {
+  REGEX_PATTERN,
+  CONSTANT_VALUES,
+  VALID_CONTENT_TYPES,
+  VALID_STATUS,
+} from '../utils/constants';
 import { ValidationException } from '../exceptions';
 
+// todo: separate file for separate validation rules
+
 // validation middleware : registration api
-export const validate = (req: Request, _: Response, next: NextFunction) => {
+export const validate = (req: Request, _res: Response, next: NextFunction) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -71,20 +83,19 @@ export const loginValidation = [
     .withMessage(LOGIN_VALIDATION_MESSAGES.VALID_EMAIL)
     .normalizeEmail(),
 
-  body('password')
-    .notEmpty()
-    .withMessage(LOGIN_VALIDATION_MESSAGES.PASSWORD_REQUIRED),
+  body('password').notEmpty().withMessage(LOGIN_VALIDATION_MESSAGES.PASSWORD_REQUIRED),
 ];
 
 // validation rules for refresh token
 export const refreshTokenValidation = [
   body('refresh_token')
     .notEmpty()
-    .withMessage('Refresh token is required')
+    .withMessage(REFRESH_TOKEN_MESSAGES.REFRESH_TOKEN_REQUIRED)
     .isString()
-    .withMessage('Refresh token must be a string'),
+    .withMessage(REFRESH_TOKEN_MESSAGES.REFRESH_TOKEN_MUST_BE_STRING),
 ];
 
+// todo : place the magic number and magic string in a constant file
 // validation rules for create content
 export const createContentValidation = [
   body('title')
@@ -97,7 +108,7 @@ export const createContentValidation = [
   body('contentType')
     .notEmpty()
     .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_REQUIRED)
-    .isIn(['blog', 'product', 'social'])
+    .isIn(VALID_CONTENT_TYPES)
     .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_INVALID),
 
   body('prompt')
@@ -106,12 +117,11 @@ export const createContentValidation = [
     .isLength({ max: 1000 })
     .withMessage(CONTENT_VALIDATION_MESSAGES.PROMPT_MAX_LENGTH),
 
-  body('generatedText')
-    .optional(),
+  body('generatedText').optional(),
 
   body('status')
     .optional()
-    .isIn(['draft', 'published'])
+    .isIn(VALID_STATUS)
     .withMessage(CONTENT_VALIDATION_MESSAGES.STATUS_INVALID),
 ];
 
@@ -127,7 +137,7 @@ export const updateContentValidation = [
 
   body('contentType')
     .optional()
-    .isIn(['blog', 'product', 'social'])
+    .isIn(VALID_CONTENT_TYPES)
     .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_INVALID),
 
   body('prompt')
@@ -144,7 +154,7 @@ export const updateContentValidation = [
 
   body('status')
     .optional()
-    .isIn(['draft', 'published'])
+    .isIn(VALID_STATUS)
     .withMessage(CONTENT_VALIDATION_MESSAGES.STATUS_INVALID),
 ];
 
@@ -160,7 +170,7 @@ export const queueContentGenerationValidation = [
   body('contentType')
     .notEmpty()
     .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_REQUIRED)
-    .isIn(['blog', 'product', 'social'])
+    .isIn(VALID_CONTENT_TYPES)
     .withMessage(CONTENT_VALIDATION_MESSAGES.CONTENT_TYPE_INVALID),
 
   body('prompt')

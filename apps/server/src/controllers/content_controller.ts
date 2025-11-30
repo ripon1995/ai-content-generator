@@ -6,6 +6,8 @@ import { IContentUpdate, IContentResponse } from '../types/content_interfaces';
 import logger from '../utils/logger';
 import { HTTP_STATUS_CODES } from '../utils/messages';
 
+// todo : remove magic string
+// todo : need to improve the filtering and searching
 export class ContentController {
   // private helper method to transform content document to response format
   private transformContentToResponse(content: any): IContentResponse {
@@ -50,7 +52,6 @@ export class ContentController {
     );
   }
 
-
   // get content list for authenticated user
   async getUserContent(req: Request, res: Response): Promise<Response> {
     const userId = (req as any).user.userId;
@@ -85,7 +86,6 @@ export class ContentController {
     );
   }
 
-
   // get content by ID
   async getContentById(req: Request, res: Response): Promise<Response> {
     const userId = (req as any).user.userId;
@@ -95,7 +95,12 @@ export class ContentController {
 
     const contentResponse: IContentResponse = this.transformContentToResponse(content);
 
-    return sendSuccess(res, contentResponse, 'Content retrieved successfully', HTTP_STATUS_CODES.OK);
+    return sendSuccess(
+      res,
+      contentResponse,
+      'Content retrieved successfully',
+      HTTP_STATUS_CODES.OK
+    );
   }
 
   // update content
@@ -122,7 +127,7 @@ export class ContentController {
 
     logger.info(`Content deleted successfully: ${id}`);
 
-    return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.OK);
+    return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.NO_CONTENT);
   }
 
   // queue content generation
@@ -151,7 +156,7 @@ export class ContentController {
         expectedDelay: 60000, // 1 minute in milliseconds
       },
       'Content generation queued successfully',
-      202 // HTTP 202 Accepted
+      HTTP_STATUS_CODES.ACCEPTED
     );
   }
 

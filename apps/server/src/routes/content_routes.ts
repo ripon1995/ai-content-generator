@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import { contentController } from '../controllers/content_controller';
-import { createContentValidation, updateContentValidation, queueContentGenerationValidation, validate } from '../middleware/validation';
+import {
+  createContentValidation,
+  updateContentValidation,
+  queueContentGenerationValidation,
+  validate,
+} from '../middleware/validation';
 import { asyncHandler } from '../middleware/error_handler';
 import { authenticate } from '../middleware/auth';
 

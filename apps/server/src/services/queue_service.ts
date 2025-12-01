@@ -96,7 +96,7 @@ class QueueService {
 
       return response;
     } catch (error: any) {
-      // re-throw if it's already a custom exception
+      // re-throw : if custom exception
       if (error instanceof NotFoundException || error instanceof QueueServiceException) {
         throw error;
       }

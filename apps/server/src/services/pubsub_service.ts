@@ -205,7 +205,6 @@ class PubSubService {
       logger.info('Subscribed to all content generation channels');
     } catch (error) {
       logger.error('Failed to subscribe to all channels:', error);
-      // Don't throw - allow graceful degradation
     }
   }
 
@@ -228,7 +227,6 @@ class PubSubService {
       logger.info('PubSubService shutdown complete');
     } catch (error) {
       logger.error('Error during PubSubService shutdown:', error);
-      // Still mark as not initialized even if shutdown fails
       this.isInitialized = false;
     }
   }

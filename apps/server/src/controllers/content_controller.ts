@@ -27,149 +27,184 @@ export class ContentController {
 
   // create new content
   async createContent(req: Request, res: Response): Promise<Response> {
-    const userId = (req as any).user.userId; // from auth middleware
-    const { title, contentType, prompt, generatedText, status } = req.body;
+    try {
+      const userId = (req as any).user.userId; // from auth middleware
+      const { title, contentType, prompt, generatedText, status } = req.body;
 
-    // create content through service
-    const content = await contentService.createContent({
-      userId,
-      title,
-      contentType,
-      prompt,
-      generatedText,
-      status,
-    });
+      // create content through service
+      const content = await contentService.createContent({
+        userId,
+        title,
+        contentType,
+        prompt,
+        generatedText,
+        status,
+      });
 
-    const contentResponse: IContentResponse = this.transformContentToResponse(content);
+      const contentResponse: IContentResponse = this.transformContentToResponse(content);
 
-    logger.info(`Content created successfully: ${content._id}`);
+      logger.info(`Content created successfully: ${content._id}`);
 
-    return sendSuccess(
-      res,
-      contentResponse,
-      'Content created successfully',
-      HTTP_STATUS_CODES.CREATED
-    );
+      return sendSuccess(
+        res,
+        contentResponse,
+        'Content created successfully',
+        HTTP_STATUS_CODES.CREATED
+      );
+    } catch (error: any) {
+      logger.error('Failed to create content:', error);
+      throw error;
+    }
   }
 
   // get content list for authenticated user
   async getUserContent(req: Request, res: Response): Promise<Response> {
-    const userId = (req as any).user.userId;
-    const { contentType, status, page, limit } = req.query;
+    try {
+      const userId = (req as any).user.userId;
+      const { contentType, status, page, limit } = req.query;
 
-    const filters = {
-      contentType: contentType as string,
-      status: status as string,
-      page: page ? parseInt(page as string, 10) : 1,
-      limit: limit ? parseInt(limit as string, 10) : 10,
-    };
+      const filters = {
+        contentType: contentType as string,
+        status: status as string,
+        page: page ? parseInt(page as string, 10) : 1,
+        limit: limit ? parseInt(limit as string, 10) : 10,
+      };
 
-    const result = await contentService.getUserContent(userId, filters);
+      const result = await contentService.getUserContent(userId, filters);
 
-    const contentResponses: IContentResponse[] = result.contents.map((content) =>
-      this.transformContentToResponse(content)
-    );
+      const contentResponses: IContentResponse[] = result.contents.map((content) =>
+        this.transformContentToResponse(content)
+      );
 
-    return sendSuccess(
-      res,
-      {
-        contents: contentResponses,
-        pagination: {
-          total: result.total,
-          page: result.page,
-          totalPages: result.totalPages,
-          limit: filters.limit,
+      return sendSuccess(
+        res,
+        {
+          contents: contentResponses,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            totalPages: result.totalPages,
+            limit: filters.limit,
+          },
         },
-      },
-      'Contents retrieved successfully',
-      HTTP_STATUS_CODES.OK
-    );
+        'Contents retrieved successfully',
+        HTTP_STATUS_CODES.OK
+      );
+    } catch (error: any) {
+      logger.error('Failed to get user content:', error);
+      throw error;
+    }
   }
 
   // get content by ID
   async getContentById(req: Request, res: Response): Promise<Response> {
-    const userId = (req as any).user.userId;
-    const { id } = req.params;
+    try {
+      const userId = (req as any).user.userId;
+      const { id } = req.params;
 
-    const content = await contentService.getContentById(id, userId);
+      const content = await contentService.getContentById(id, userId);
 
-    const contentResponse: IContentResponse = this.transformContentToResponse(content);
+      const contentResponse: IContentResponse = this.transformContentToResponse(content);
 
-    return sendSuccess(
-      res,
-      contentResponse,
-      'Content retrieved successfully',
-      HTTP_STATUS_CODES.OK
-    );
+      return sendSuccess(
+        res,
+        contentResponse,
+        'Content retrieved successfully',
+        HTTP_STATUS_CODES.OK
+      );
+    } catch (error: any) {
+      logger.error('Failed to get content by ID:', error);
+      throw error;
+    }
   }
 
   // update content
   async updateContent(req: Request, res: Response): Promise<Response> {
-    const userId = (req as any).user.userId;
-    const { id } = req.params;
-    const updateData: IContentUpdate = req.body;
+    try {
+      const userId = (req as any).user.userId;
+      const { id } = req.params;
+      const updateData: IContentUpdate = req.body;
 
-    const content = await contentService.updateContent(id, userId, updateData);
+      const content = await contentService.updateContent(id, userId, updateData);
 
-    const contentResponse: IContentResponse = this.transformContentToResponse(content);
+      const contentResponse: IContentResponse = this.transformContentToResponse(content);
 
-    logger.info(`Content updated successfully: ${id}`);
+      logger.info(`Content updated successfully: ${id}`);
 
-    return sendSuccess(res, contentResponse, 'Content updated successfully', HTTP_STATUS_CODES.OK);
+      return sendSuccess(res, contentResponse, 'Content updated successfully', HTTP_STATUS_CODES.OK);
+    } catch (error: any) {
+      logger.error('Failed to update content:', error);
+      throw error;
+    }
   }
 
   // delete content
   async deleteContent(req: Request, res: Response): Promise<Response> {
-    const userId = (req as any).user.userId;
-    const { id } = req.params;
+    try {
+      const userId = (req as any).user.userId;
+      const { id } = req.params;
 
-    await contentService.deleteContent(id, userId);
+      await contentService.deleteContent(id, userId);
 
-    logger.info(`Content deleted successfully: ${id}`);
+      logger.info(`Content deleted successfully: ${id}`);
 
-    return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.NO_CONTENT);
+      return sendSuccess(res, null, 'Content deleted successfully', HTTP_STATUS_CODES.NO_CONTENT);
+    } catch (error: any) {
+      logger.error('Failed to delete content:', error);
+      throw error;
+    }
   }
 
   // queue content generation
   async queueContentGeneration(req: Request, res: Response): Promise<Response> {
-    const userId = (req as any).user.userId;
-    const { title, contentType, prompt } = req.body;
+    try {
+      const userId = (req as any).user.userId;
+      const { title, contentType, prompt } = req.body;
 
-    // queue content generation through service
-    const { content, jobId } = await contentService.queueContentGeneration({
-      userId,
-      title,
-      contentType,
-      prompt,
-    });
+      // queue content generation through service
+      const { content, jobId } = await contentService.queueContentGeneration({
+        userId,
+        title,
+        contentType,
+        prompt,
+      });
 
-    const contentResponse: IContentResponse = this.transformContentToResponse(content);
+      const contentResponse: IContentResponse = this.transformContentToResponse(content);
 
-    logger.info(`Content generation queued successfully: ${content._id}, Job ID: ${jobId}`);
+      logger.info(`Content generation queued successfully: ${content._id}, Job ID: ${jobId}`);
 
-    return sendSuccess(
-      res,
-      {
-        ...contentResponse,
-        jobId,
-        message: 'Content generation queued. It will be processed in 1 minute.',
-        expectedDelay: 60000, // 1 minute in milliseconds
-      },
-      'Content generation queued successfully',
-      HTTP_STATUS_CODES.ACCEPTED
-    );
+      return sendSuccess(
+        res,
+        {
+          ...contentResponse,
+          jobId,
+          message: 'Content generation queued. It will be processed in 1 minute.',
+          expectedDelay: 60000, // 1 minute in milliseconds
+        },
+        'Content generation queued successfully',
+        HTTP_STATUS_CODES.ACCEPTED
+      );
+    } catch (error: any) {
+      logger.error('Failed to queue content generation:', error);
+      throw error;
+    }
   }
 
   // get job status
   async getJobStatus(req: Request, res: Response): Promise<Response> {
-    const { jobId } = req.params;
+    try {
+      const { jobId } = req.params;
 
-    // get job status from queue service
-    const jobStatus = await queueService.getJobStatus(jobId);
+      // get job status from queue service
+      const jobStatus = await queueService.getJobStatus(jobId);
 
-    logger.info(`Job status retrieved: ${jobId}, Status: ${jobStatus.status}`);
+      logger.info(`Job status retrieved: ${jobId}, Status: ${jobStatus.status}`);
 
-    return sendSuccess(res, jobStatus, 'Job status retrieved successfully', HTTP_STATUS_CODES.OK);
+      return sendSuccess(res, jobStatus, 'Job status retrieved successfully', HTTP_STATUS_CODES.OK);
+    } catch (error: any) {
+      logger.error('Failed to get job status:', error);
+      throw error;
+    }
   }
 }
 

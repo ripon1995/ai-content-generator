@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { IRefreshTokenDocument } from '../types/refresh_token_interfaces';
 import { baseFlagFields, baseSchemaOptions } from './base_schema_fields';
 import { applyBaseQueryManager } from '../middleware/query_manager';
+import logger from '../utils/logger';
 
 // refresh token schema
 const refreshTokenSchema = new Schema<IRefreshTokenDocument>(
@@ -53,18 +54,32 @@ refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL in
 
 // hash token before saving
 refreshTokenSchema.pre('save', async function (next) {
-  if (!this.isModified('token')) return next();
+  // only hash token if it's modified or new
+  if (!this.isModified('token')) {
+    return next();
+  }
 
-  const salt = await bcrypt.genSalt(10);
-  this.token = await bcrypt.hash(this.token, salt);
-  next();
+  try {
+    // generate salt and hash token
+    const salt = await bcrypt.genSalt(10);
+    this.token = await bcrypt.hash(this.token, salt);
+    next();
+  } catch (error) {
+    logger.error(error);
+    next(error as Error);
+  }
 });
 
 // method to compare token
 refreshTokenSchema.methods.compareToken = async function (
   candidateToken: string
 ): Promise<boolean> {
-  return await bcrypt.compare(candidateToken, this.token);
+  try {
+    return await bcrypt.compare(candidateToken, this.token);
+  } catch (error) {
+    logger.error(error);
+    return false;
+  }
 };
 
 // apply query manager for soft deletes

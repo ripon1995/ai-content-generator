@@ -52,48 +52,58 @@ class QueueService {
 
   // get job status and content
   async getJobStatus(jobId: string): Promise<IJobStatusResponse> {
-    const job = await this.getJobById(jobId);
+    try {
+      const job = await this.getJobById(jobId);
 
-    if (!job) {
-      throw new NotFoundException('Job not found');
-    }
+      if (!job) {
+        throw new NotFoundException('Job not found');
+      }
 
-    // get job state from Bull
-    const bullJobStatus = await job.getState();
+      // get job state from Bull
+      const bullJobStatus = await job.getState();
 
-    // find the associated content document
-    const content = await Content.findById(job.data.contentId);
+      // find the associated content document
+      const content = await Content.findById(job.data.contentId);
 
-    if (!content) {
-      logger.warn(`Content not found for job: ${jobId}`);
-      throw new NotFoundException('Content not found');
-    }
+      if (!content) {
+        logger.warn(`Content not found for job: ${jobId}`);
+        throw new NotFoundException('Content not found');
+      }
 
-    // map Bull job status to our generation status
-    const generationStatus = this.mapBullStatusToGenerationStatus(
-      bullJobStatus,
-      content.generationStatus
-    );
+      // map Bull job status to our generation status
+      const generationStatus = this.mapBullStatusToGenerationStatus(
+        bullJobStatus,
+        content.generationStatus
+      );
 
-    const response: IJobStatusResponse = {
-      jobId: jobId,
-      status: generationStatus,
-      failureReason: content.failureReason,
-    };
-
-    // include content details if job is completed
-    // otherwise no need to add the content detail
-    if (generationStatus === 'completed') {
-      response.content = {
-        id: content._id.toString(),
-        title: content.title,
-        generatedText: content.generatedText,
-        contentType: content.contentType,
-        prompt: content.prompt,
+      const response: IJobStatusResponse = {
+        jobId: jobId,
+        status: generationStatus,
+        failureReason: content.failureReason,
       };
-    }
 
-    return response;
+      // include content details if job is completed
+      // otherwise no need to add the content detail
+      if (generationStatus === 'completed') {
+        response.content = {
+          id: content._id.toString(),
+          title: content.title,
+          generatedText: content.generatedText,
+          contentType: content.contentType,
+          prompt: content.prompt,
+        };
+      }
+
+      return response;
+    } catch (error: any) {
+      // re-throw if it's already a custom exception
+      if (error instanceof NotFoundException || error instanceof QueueServiceException) {
+        throw error;
+      }
+
+      logger.error(`Failed to get job status for ${jobId}:`, error);
+      throw new QueueServiceException(`Failed to get job status: ${error.message}`);
+    }
   }
 
   // private helper to map Bull job status to our generation status

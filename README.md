@@ -17,9 +17,10 @@
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
 - [Queue System & Worker Process](#queue-system--worker-process)
+- [Real-time Updates with Socket.io](#real-time-updates-with-socketio)
+- [Deployment](#deployment)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
 
 ---
 
@@ -67,6 +68,13 @@
   - Content status management (draft/published)
   - Soft delete functionality
 
+- **Real-time Updates**
+  - WebSocket connections via Socket.io
+  - Live content generation status updates
+  - Authenticated socket connections with JWT
+  - Room-based user isolation
+  - Redis Pub/Sub for multi-server scalability
+
 ### 🔧 Technical Features
 
 - Custom exception handling with proper HTTP status codes
@@ -75,6 +83,9 @@
 - Graceful shutdown for worker processes
 - MongoDB indexing for performance
 - Environment-based configuration
+- WebSocket authentication middleware
+- Redis Pub/Sub for cross-process communication
+- Comprehensive error handling at all layers
 
 ---
 
@@ -87,6 +98,7 @@
 - **Language**: TypeScript
 - **Database**: MongoDB (Mongoose ODM)
 - **Cache/Queue**: Redis + Bull
+- **Real-time**: Socket.io (WebSocket)
 - **AI**: Google Generative AI (Gemini)
 
 ### Authentication & Security
@@ -112,7 +124,9 @@
 ┌─────────────┐         ┌──────────────┐         ┌─────────────┐
 │             │ HTTP    │              │  Queue  │             │
 │   Client    ├────────▶│  API Server  ├────────▶│    Redis    │
-│             │         │  (Express)   │         │   (Bull)    │
+│             │         │  (Express)   │         │  (Bull +    │
+│             │◄────────┤  + Socket.io │         │   Pub/Sub)  │
+│             │WebSocket│              │         │             │
 └─────────────┘         └──────┬───────┘         └──────┬──────┘
                                │                        │
                                │                        │
@@ -132,20 +146,27 @@
 
 ### Request Flow
 
-#### 1. Content Generation Request
+#### 1. Content Generation Request (with Real-time Updates)
 
 ```
-1. User sends POST /api/content/generate
-2. API validates request and authenticates user
-3. Creates content record in MongoDB (status: pending)
-4. Adds job to Redis queue with 1-minute delay
-5. Returns 202 Accepted with jobId
-6. Worker picks up job after 1 minute
-7. Worker calls Gemini AI to generate content
-8. Worker updates content record (status: completed)
-9. User polls GET /api/content/job/:jobId/status
-10. Returns generated content
+1. User connects to Socket.io server (wss://localhost:3000)
+2. Socket authenticates user with JWT token
+3. User joins their personal room (user:{userId})
+4. User sends POST /api/content/generate
+5. API validates request and authenticates user
+6. Creates content record in MongoDB (status: pending)
+7. Adds job to Redis queue with 1-minute delay
+8. Returns 202 Accepted with jobId
+9. Worker picks up job after 1 minute
+10. Worker emits "generation started" event → Redis Pub/Sub → Socket.io
+11. Client receives real-time update: status = "processing"
+12. Worker calls Gemini AI to generate content
+13. Worker emits "generation completed" event → Redis Pub/Sub → Socket.io
+14. Client receives real-time update with generated content
+15. Content is displayed immediately without polling
 ```
+
+**Note**: Users can still poll GET /api/content/job/:jobId/status if not using Socket.io.
 
 ---
 
@@ -161,7 +182,9 @@ ai-content-generator/
 │   │   │   │   ├── database.ts    # MongoDB connection
 │   │   │   │   ├── env.ts         # Environment variables
 │   │   │   │   ├── queue.ts       # Bull queue setup
-│   │   │   │   └── redis.ts       # Redis client config
+│   │   │   │   ├── redis.ts       # Redis client config
+│   │   │   │   ├── socket.ts      # Socket.io configuration
+│   │   │   │   └── server.ts      # Server configuration
 │   │   │   │
 │   │   │   ├── controllers/       # Route controllers
 │   │   │   │   ├── auth_controller.ts
@@ -178,7 +201,9 @@ ai-content-generator/
 │   │   │   ├── middleware/        # Express middleware
 │   │   │   │   ├── api_logging.ts
 │   │   │   │   ├── auth.ts
+│   │   │   │   ├── socket_auth.ts
 │   │   │   │   ├── error_handler.ts
+│   │   │   │   ├── query_manager.ts
 │   │   │   │   └── validation.ts
 │   │   │   │
 │   │   │   ├── models/            # Mongoose models
@@ -196,7 +221,9 @@ ai-content-generator/
 │   │   │   │   ├── ai_service.ts
 │   │   │   │   ├── auth_service.ts
 │   │   │   │   ├── content_service.ts
-│   │   │   │   └── queue_service.ts
+│   │   │   │   ├── queue_service.ts
+│   │   │   │   ├── socket_service.ts
+│   │   │   │   └── pubsub_service.ts
 │   │   │   │
 │   │   │   ├── types/             # TypeScript interfaces
 │   │   │   │   ├── content_interfaces.ts
@@ -429,12 +456,11 @@ pnpm run dev:all
 You should see:
 
 ```
-[0] 🚀 Server running on http://localhost:3000
-[0] 📡 API endpoint: http://localhost:3000/api/welcome
-[0] 🌍 Environment: development
-[1] 🤖 Worker process starting...
-[1] ✅ Content generation processor registered
-[1] 👂 Worker is now listening for jobs...
+[0] Server running on http://localhost:3000
+[0] Environment: development
+[1] Worker process starting...
+[1] Content generation processor registered
+[1] Worker is now listening for jobs...
 ```
 
 ### Option 2: Run Server and Worker Separately
@@ -777,6 +803,228 @@ pending → processing → completed
 
 ---
 
+## Real-time Updates with Socket.io
+
+### Overview
+
+The application uses **Socket.io** for real-time bidirectional communication between the server and clients. This enables instant updates during content generation without polling.
+
+### Architecture
+
+- **Socket.io Server**: Runs alongside the Express HTTP server
+- **Authentication**: JWT-based socket authentication middleware
+- **User Rooms**: Each user joins a private room (`user:{userId}`)
+- **Pub/Sub**: Redis Pub/Sub for multi-server scalability
+- **Events**: Real-time content generation status updates
+
+### Socket Events
+
+#### Client → Server Events
+
+| Event        | Description                         |
+| ------------ | ----------------------------------- |
+| `connection` | Client connects to Socket.io server |
+
+#### Server → Client Events
+
+| Event                          | Description                               | Payload                                                                      |
+| ------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `content:generation:started`   | Content generation has started            | `{ contentId, jobId, status, timestamp }`                                    |
+| `content:generation:completed` | Content generation completed successfully | `{ contentId, jobId, status, title, contentType, generatedText, timestamp }` |
+| `content:generation:failed`    | Content generation failed                 | `{ contentId, jobId, status, failureReason, timestamp }`                     |
+
+### Connection Example
+
+#### JavaScript/TypeScript (Frontend)
+
+```typescript
+import { io, Socket } from 'socket.io-client';
+
+// Get access token from localStorage or auth context
+const accessToken = localStorage.getItem('access_token');
+
+// Connect to Socket.io server
+const socket: Socket = io('http://localhost:3000', {
+  auth: {
+    token: accessToken, // JWT token for authentication
+  },
+  transports: ['websocket', 'polling'],
+});
+
+// Connection events
+socket.on('connect', () => {
+  console.log('Connected to Socket.io server');
+  console.log('Socket ID:', socket.id);
+});
+
+socket.on('disconnect', (reason) => {
+  console.log('Disconnected:', reason);
+});
+
+socket.on('connect_error', (error) => {
+  console.error('Connection error:', error.message);
+});
+
+// Listen for content generation events
+socket.on('content:generation:started', (data) => {
+  console.log('Generation started:', data);
+  // Update UI: show "Processing..." status
+});
+
+socket.on('content:generation:completed', (data) => {
+  console.log('Generation completed:', data);
+  // Update UI: display generated content
+  // data contains: contentId, jobId, title, generatedText, etc.
+});
+
+socket.on('content:generation:failed', (data) => {
+  console.error('Generation failed:', data);
+  // Update UI: show error message
+  // data contains: contentId, jobId, failureReason
+});
+
+// Clean up on unmount
+function cleanup() {
+  socket.disconnect();
+}
+```
+
+### Authentication
+
+Socket connections are authenticated using JWT tokens:
+
+1. Client sends JWT access token in the `auth` object during connection
+2. Server validates the token using the same JWT secret
+3. If valid, user data is attached to the socket
+4. User is automatically joined to their private room: `user:{userId}`
+5. Only authenticated users receive events
+
+**Authentication Middleware** (`socket_auth.ts`):
+
+```typescript
+// Server-side implementation
+socket.use(socketAuthMiddleware);
+// Validates JWT and attaches user data to socket.user
+```
+
+### Redis Pub/Sub Integration
+
+The system uses Redis Pub/Sub to enable real-time updates across multiple server instances:
+
+**Flow:**
+
+```
+Worker Process → Redis Pub/Sub → API Server(s) → Socket.io → Client(s)
+```
+
+**Channels:**
+
+- `content:generation:started`
+- `content:generation:completed`
+- `content:generation:failed`
+
+This architecture allows horizontal scaling with multiple API server instances while maintaining real-time functionality.
+
+### Example Use Case
+
+**Scenario**: User queues a blog post generation
+
+1. **User submits request**:
+
+   ```typescript
+   const response = await fetch('/api/content/generate', {
+     method: 'POST',
+     headers: {
+       Authorization: `Bearer ${accessToken}`,
+       'Content-Type': 'application/json',
+     },
+     body: JSON.stringify({
+       title: 'Benefits of AI',
+       contentType: 'blog',
+       prompt: 'Write about AI benefits',
+     }),
+   });
+
+   const { jobId } = await response.json();
+   ```
+
+2. **After 1 minute, worker starts processing**:
+
+   ```typescript
+   // Client receives via Socket.io:
+   socket.on('content:generation:started', (data) => {
+     // { contentId: '...', jobId: '1', status: 'processing', timestamp: ... }
+     setStatus('Generating your content...');
+   });
+   ```
+
+3. **When AI generation completes**:
+   ```typescript
+   socket.on('content:generation:completed', (data) => {
+     // {
+     //   contentId: '...',
+     //   jobId: '1',
+     //   status: 'completed',
+     //   title: 'Benefits of AI',
+     //   contentType: 'blog',
+     //   generatedText: 'Artificial Intelligence...',
+     //   timestamp: ...
+     // }
+     displayContent(data.generatedText);
+   });
+   ```
+
+### Environment Configuration
+
+Socket.io configuration is already included in the server setup. No additional environment variables are required.
+
+**CORS Configuration** (`config/socket.ts`):
+
+```typescript
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+```
+
+### Benefits
+
+**No Polling**: Eliminates the need for repeated API calls
+**Instant Updates**: Users see generation progress in real-time
+**Scalable**: Redis Pub/Sub enables multi-server deployments
+**Secure**: JWT-based authentication for socket connections
+**Efficient**: WebSocket connections use less bandwidth than HTTP polling
+
+---
+
+## Deployment
+
+### Live Application
+
+The application is deployed on **[Render](https://render.com)** with the following services:
+
+| Service             | Live URL                                                                                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Web Application** | [https://ai-content-generator-web.onrender.com](https://ai-content-generator-web.onrender.com)                 |
+| **API Server**      | [https://ai-content-generator-server-xou3.onrender.com](https://ai-content-generator-server-xou3.onrender.com) |
+| **Worker Process**  | [https://ai-content-generator-worker.onrender.com](https://ai-content-generator-worker.onrender.com)           |
+
+### Deployment Stack
+
+- **Frontend**: Static Site (React + Vite)
+- **Backend**: Web Service (Node.js + Express + Socket.io)
+- **Worker**: Background Worker (Bull Queue processor)
+- **Redis**: Managed Redis instance for queue and Pub/Sub
+- **Database**: MongoDB Atlas (external)
+
+### Notes
+
+**Free Tier**: Services may spin down after 15 minutes of inactivity (30-50 second cold starts)
+
+---
+
 ## Development
 
 ### Available Scripts
@@ -879,4 +1127,33 @@ Invalid token
 - Token may have expired (access tokens expire in 15 minutes)
 - Use refresh token endpoint to get new access token
 
-**Built with ❤️ using Node.js, Express, MongoDB, Redis, and Google Gemini AI**
+#### 6. Socket.io Connection Issues
+
+**Error:**
+
+```
+WebSocket connection failed
+```
+
+**Solutions:**
+
+- Ensure the server is running with Socket.io initialized
+- Check that JWT token is being sent in `auth` object during connection
+- Verify CORS settings in `config/socket.ts` include your client URL
+- Check browser console for specific Socket.io error messages
+- Ensure Redis is running (required for Pub/Sub)
+- Try switching transport: `transports: ['polling', 'websocket']`
+
+#### 7. Real-time Updates Not Received
+
+**Solutions:**
+
+- Verify Socket.io connection is established (`socket.connected === true`)
+- Check that worker process is running (`pnpm run worker:dev`)
+- Ensure Redis Pub/Sub is initialized in both API server and worker
+- Check server logs for Pub/Sub events being published
+- Verify user is authenticated and joined to their room
+
+---
+
+**Developed using Node.js, Express, MongoDB, Redis, Socket.io, and Google Gemini AI**

@@ -189,37 +189,46 @@ class PubSubService {
     onCompleted?: (message: IPubSubMessage<IContentGenerationCompletedPayload>) => void;
     onFailed?: (message: IPubSubMessage<IContentGenerationFailedPayload>) => void;
   }): Promise<void> {
-    if (callbacks.onStarted) {
-      await this.subscribe(PubSubChannels.CONTENT_GENERATION_STARTED, callbacks.onStarted);
-    }
+    try {
+      if (callbacks.onStarted) {
+        await this.subscribe(PubSubChannels.CONTENT_GENERATION_STARTED, callbacks.onStarted);
+      }
 
-    if (callbacks.onCompleted) {
-      await this.subscribe(PubSubChannels.CONTENT_GENERATION_COMPLETED, callbacks.onCompleted);
-    }
+      if (callbacks.onCompleted) {
+        await this.subscribe(PubSubChannels.CONTENT_GENERATION_COMPLETED, callbacks.onCompleted);
+      }
 
-    if (callbacks.onFailed) {
-      await this.subscribe(PubSubChannels.CONTENT_GENERATION_FAILED, callbacks.onFailed);
-    }
+      if (callbacks.onFailed) {
+        await this.subscribe(PubSubChannels.CONTENT_GENERATION_FAILED, callbacks.onFailed);
+      }
 
-    logger.info('Subscribed to all content generation channels');
+      logger.info('Subscribed to all content generation channels');
+    } catch (error) {
+      logger.error('Failed to subscribe to all channels:', error);
+    }
   }
 
   // graceful shutdown
   async shutdown(): Promise<void> {
-    logger.info('Shutting down PubSubService...');
+    try {
+      logger.info('Shutting down PubSubService...');
 
-    if (this.publisher) {
-      await this.publisher.quit();
-      logger.info('Publisher disconnected');
+      if (this.publisher) {
+        await this.publisher.quit();
+        logger.info('Publisher disconnected');
+      }
+
+      if (this.subscriber) {
+        await this.subscriber.quit();
+        logger.info('Subscriber disconnected');
+      }
+
+      this.isInitialized = false;
+      logger.info('PubSubService shutdown complete');
+    } catch (error) {
+      logger.error('Error during PubSubService shutdown:', error);
+      this.isInitialized = false;
     }
-
-    if (this.subscriber) {
-      await this.subscriber.quit();
-      logger.info('Subscriber disconnected');
-    }
-
-    this.isInitialized = false;
-    logger.info('PubSubService shutdown complete');
   }
 }
 

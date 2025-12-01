@@ -21,7 +21,7 @@ async function startWorker() {
 
     // dummy check to fix the build issue
     const app = express();
-    const PORT = 5002;
+    const PORT = process.env.PORT || 10000;
     app.get('/', (_req, res) => {
       res.status(200).send('Worker is active and processing jobs');
     });

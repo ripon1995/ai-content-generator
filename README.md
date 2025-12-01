@@ -18,6 +18,7 @@
 - [API Documentation](#api-documentation)
 - [Queue System & Worker Process](#queue-system--worker-process)
 - [Real-time Updates with Socket.io](#real-time-updates-with-socketio)
+- [Deployment](#deployment)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
 
@@ -455,12 +456,11 @@ pnpm run dev:all
 You should see:
 
 ```
-[0] 🚀 Server running on http://localhost:3000
-[0] 📡 API endpoint: http://localhost:3000/api/welcome
-[0] 🌍 Environment: development
-[1] 🤖 Worker process starting...
-[1] ✅ Content generation processor registered
-[1] 👂 Worker is now listening for jobs...
+[0] Server running on http://localhost:3000
+[0] Environment: development
+[1] Worker process starting...
+[1] Content generation processor registered
+[1] Worker is now listening for jobs...
 ```
 
 ### Option 2: Run Server and Worker Separately
@@ -821,17 +821,17 @@ The application uses **Socket.io** for real-time bidirectional communication bet
 
 #### Client → Server Events
 
-| Event | Description |
-|-------|-------------|
+| Event        | Description                         |
+| ------------ | ----------------------------------- |
 | `connection` | Client connects to Socket.io server |
 
 #### Server → Client Events
 
-| Event | Description | Payload |
-|-------|-------------|---------|
-| `content:generation:started` | Content generation has started | `{ contentId, jobId, status, timestamp }` |
+| Event                          | Description                               | Payload                                                                      |
+| ------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `content:generation:started`   | Content generation has started            | `{ contentId, jobId, status, timestamp }`                                    |
 | `content:generation:completed` | Content generation completed successfully | `{ contentId, jobId, status, title, contentType, generatedText, timestamp }` |
-| `content:generation:failed` | Content generation failed | `{ contentId, jobId, status, failureReason, timestamp }` |
+| `content:generation:failed`    | Content generation failed                 | `{ contentId, jobId, status, failureReason, timestamp }`                     |
 
 ### Connection Example
 
@@ -846,9 +846,9 @@ const accessToken = localStorage.getItem('access_token');
 // Connect to Socket.io server
 const socket: Socket = io('http://localhost:3000', {
   auth: {
-    token: accessToken  // JWT token for authentication
+    token: accessToken, // JWT token for authentication
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
 });
 
 // Connection events
@@ -900,6 +900,7 @@ Socket connections are authenticated using JWT tokens:
 5. Only authenticated users receive events
 
 **Authentication Middleware** (`socket_auth.ts`):
+
 ```typescript
 // Server-side implementation
 socket.use(socketAuthMiddleware);
@@ -911,11 +912,13 @@ socket.use(socketAuthMiddleware);
 The system uses Redis Pub/Sub to enable real-time updates across multiple server instances:
 
 **Flow:**
+
 ```
 Worker Process → Redis Pub/Sub → API Server(s) → Socket.io → Client(s)
 ```
 
 **Channels:**
+
 - `content:generation:started`
 - `content:generation:completed`
 - `content:generation:failed`
@@ -927,24 +930,26 @@ This architecture allows horizontal scaling with multiple API server instances w
 **Scenario**: User queues a blog post generation
 
 1. **User submits request**:
+
    ```typescript
    const response = await fetch('/api/content/generate', {
      method: 'POST',
      headers: {
-       'Authorization': `Bearer ${accessToken}`,
-       'Content-Type': 'application/json'
+       Authorization: `Bearer ${accessToken}`,
+       'Content-Type': 'application/json',
      },
      body: JSON.stringify({
        title: 'Benefits of AI',
        contentType: 'blog',
-       prompt: 'Write about AI benefits'
-     })
+       prompt: 'Write about AI benefits',
+     }),
    });
 
    const { jobId } = await response.json();
    ```
 
 2. **After 1 minute, worker starts processing**:
+
    ```typescript
    // Client receives via Socket.io:
    socket.on('content:generation:started', (data) => {
@@ -974,22 +979,49 @@ This architecture allows horizontal scaling with multiple API server instances w
 Socket.io configuration is already included in the server setup. No additional environment variables are required.
 
 **CORS Configuration** (`config/socket.ts`):
+
 ```typescript
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 ```
 
 ### Benefits
 
-✅ **No Polling**: Eliminates the need for repeated API calls
-✅ **Instant Updates**: Users see generation progress in real-time
-✅ **Scalable**: Redis Pub/Sub enables multi-server deployments
-✅ **Secure**: JWT-based authentication for socket connections
-✅ **Efficient**: WebSocket connections use less bandwidth than HTTP polling
+**No Polling**: Eliminates the need for repeated API calls
+**Instant Updates**: Users see generation progress in real-time
+**Scalable**: Redis Pub/Sub enables multi-server deployments
+**Secure**: JWT-based authentication for socket connections
+**Efficient**: WebSocket connections use less bandwidth than HTTP polling
+
+---
+
+## Deployment
+
+### Live Application
+
+The application is deployed on **[Render](https://render.com)** with the following services:
+
+| Service             | Live URL                                                                                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Web Application** | [https://ai-content-generator-web.onrender.com](https://ai-content-generator-web.onrender.com)                 |
+| **API Server**      | [https://ai-content-generator-server-xou3.onrender.com](https://ai-content-generator-server-xou3.onrender.com) |
+| **Worker Process**  | [https://ai-content-generator-worker.onrender.com](https://ai-content-generator-worker.onrender.com)           |
+
+### Deployment Stack
+
+- **Frontend**: Static Site (React + Vite)
+- **Backend**: Web Service (Node.js + Express + Socket.io)
+- **Worker**: Background Worker (Bull Queue processor)
+- **Redis**: Managed Redis instance for queue and Pub/Sub
+- **Database**: MongoDB Atlas (external)
+
+### Notes
+
+**Free Tier**: Services may spin down after 15 minutes of inactivity (30-50 second cold starts)
 
 ---
 
@@ -1124,4 +1156,4 @@ WebSocket connection failed
 
 ---
 
-**Built with ❤️ using Node.js, Express, MongoDB, Redis, Socket.io, and Google Gemini AI**
+**Developed using Node.js, Express, MongoDB, Redis, Socket.io, and Google Gemini AI**
